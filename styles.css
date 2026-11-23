@@ -430,6 +430,63 @@ body {
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
 }
 
+/* BOTÓ FLOTANT WIKILOC "TRACKS OFICIALS" (ESTIL LIQUID GLASS / CRYSTAL GLASS iPHONE) */
+.btn-floating-wikiloc {
+  position: absolute;
+  bottom: 90px;
+  right: 24px;
+  z-index: 900;
+  height: 56px;
+  padding: 0 22px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+
+  /* Efecte iPhone Crystal / Liquid Glass */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.22) 100%);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.18),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.25);
+
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.btn-floating-wikiloc:hover {
+  transform: translateY(-5px) scale(1.05);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.36) 100%);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.24),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.btn-floating-wikiloc .wikiloc-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  flex-shrink: 0;
+}
+
+.btn-floating-wikiloc .wikiloc-text {
+  font-weight: 800;
+  color: #1c2621;
+  font-size: 1.02rem;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+}
+
 /* BOTÓ FLOTANT "AFEGEIX UN PESSEBRE" */
 .btn-floating-add {
   position: absolute;
@@ -835,29 +892,6 @@ body {
 .rank-1 { background: #ffe066; color: #7a5200; }
 .rank-2 { background: #e0e0e0; color: #424242; }
 .rank-3 { background: #f4a261; color: #5c2c00; }
-
-.ranking-completed-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15rem;
-  margin-left: 5px;
-  vertical-align: middle;
-  filter: drop-shadow(0 2px 5px rgba(212, 175, 55, 0.7));
-  cursor: help;
-  animation: rankingTrophyPulse 3s infinite ease-in-out;
-}
-
-@keyframes rankingTrophyPulse {
-  0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 2px 5px rgba(212, 175, 55, 0.7));
-  }
-  50% {
-    transform: scale(1.22) rotate(4deg);
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.95));
-  }
-}
 
 /* --------------------------------------------------------------------------
    PANEL D'ADMINISTRACIÓ
@@ -1628,25 +1662,6 @@ body {
     margin-bottom: 2px;
   }
 
-  .floating-title-overlay .trophy-title-badge {
-    margin-top: 6px;
-    padding: 6px 8px;
-    width: auto;
-  }
-
-  .floating-title-overlay .trophy-header-3d-container {
-    width: 90px;
-    height: 105px;
-  }
-
-  .floating-title-overlay .trophy-badge-info .tb-tag {
-    font-size: 0.65rem;
-  }
-
-  .floating-title-overlay .trophy-badge-info .tb-name {
-    font-size: 0.58rem;
-  }
-
   .floating-title-overlay .title-line-1,
   .floating-title-overlay .title-line-2 {
     display: inline;
@@ -1821,6 +1836,26 @@ body {
     border-bottom: none;
   }
 
+  /* Botó Wikiloc Liquid Glass a mòbil */
+  .btn-floating-wikiloc {
+    bottom: 72px;
+    right: 12px;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 22px;
+    gap: 8px;
+    z-index: 950;
+  }
+
+  .btn-floating-wikiloc .wikiloc-logo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .btn-floating-wikiloc .wikiloc-text {
+    font-size: 0.86rem;
+  }
+
   /* Botó "+ Afegeix un pessebre" a mòbil */
   .btn-floating-add {
     bottom: 24px;
@@ -1909,6 +1944,19 @@ body {
   .btn-auth-pill {
     padding: 4px 7px !important;
     font-size: 0.7rem !important;
+  }
+  .btn-floating-wikiloc {
+    bottom: 68px;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+  }
+  .btn-floating-wikiloc .wikiloc-logo {
+    width: 22px;
+    height: 22px;
+  }
+  .btn-floating-wikiloc .wikiloc-text {
+    font-size: 0.78rem;
   }
   .btn-floating-add {
     padding: 0 10px;
@@ -2132,526 +2180,6 @@ body {
   }
 }
 
-/* ==========================================================================
-   TROFEU OFICIAL RUTA DELS PESSEBRES (100% COMPLETAT)
-   ========================================================================== */
-
-/* Canvas d'efectes continus (Neu i Confeti tot el rato per al guanyador) */
-#victory-effects-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 998;
-}
-
-/* 1. Escultura 3D permanent sota el títol de PESSEBRES */
-.trophy-title-badge {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin-top: 14px;
-  background: radial-gradient(circle at 50% 30%, rgba(35, 20, 10, 0.94) 0%, rgba(14, 8, 4, 0.96) 100%);
-  border: 2px solid #d4af37;
-  border-radius: 18px;
-  padding: 8px 10px 8px 10px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.65), 0 0 30px rgba(212, 175, 55, 0.4);
-  pointer-events: auto;
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
-  user-select: none;
-  animation: trophyBadgeEntrance 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-.trophy-title-badge:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 45px rgba(255, 215, 0, 0.6);
-}
-
-@keyframes trophyBadgeEntrance {
-  0% { opacity: 0; transform: translateY(-12px) scale(0.85); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Aura lluminosa daurada que batega al voltant del trofeu */
-.trophy-badge-glow {
-  position: absolute;
-  inset: -6px;
-  border-radius: 24px;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, rgba(212, 175, 55, 0) 70%);
-  pointer-events: none;
-  z-index: 0;
-  animation: trophyGlowPulse 2.8s ease-in-out infinite alternate;
-}
-
-@keyframes trophyGlowPulse {
-  0% { opacity: 0.35; transform: scale(0.98); }
-  100% { opacity: 0.85; transform: scale(1.04); }
-}
-
-/* Contenidor de l'escultura 3D sota el títol */
-.trophy-header-3d-container {
-  width: 140px;
-  height: 165px;
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  background: radial-gradient(circle at 50% 40%, rgba(212, 175, 55, 0.12) 0%, transparent 75%);
-  z-index: 1;
-}
-
-.trophy-header-3d-container canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  outline: none;
-}
-
-.trophy-header-3d-loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(14, 8, 4, 0.8);
-  z-index: 2;
-  transition: opacity 0.3s ease;
-}
-
-.trophy-header-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(255, 215, 0, 0.3);
-  border-top-color: #ffd700;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.trophy-badge-info {
-  text-align: center;
-  z-index: 1;
-  padding: 0 4px;
-}
-
-.trophy-badge-info .tb-tag {
-  display: block;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.74rem;
-  font-weight: 900;
-  color: #ffd700;
-  letter-spacing: 0.8px;
-  line-height: 1.1;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
-}
-
-.trophy-badge-info .tb-name {
-  display: block;
-  font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif;
-  font-size: 0.64rem;
-  font-weight: 700;
-  color: #f3ece5;
-  letter-spacing: 0.5px;
-}
-
-/* 2. Modal de celebració i admiració del Trofeu */
-.modal-trophy-card {
-  max-width: 480px;
-  width: 92%;
-  max-height: 92vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  background: radial-gradient(circle at 50% 20%, #20130a 0%, #0d0704 100%);
-  border: 2px solid #e5b869;
-  border-radius: var(--radius-lg);
-  color: #fff;
-  padding: 26px 20px 20px 20px;
-  text-align: center;
-  position: relative;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 45px rgba(212, 175, 55, 0.45);
-}
-
-.trophy-modal-halo {
-  position: absolute;
-  top: -80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.28) 0%, rgba(212, 175, 55, 0) 70%);
-  pointer-events: none;
-  animation: trophyGlowPulse 3s ease-in-out infinite alternate;
-}
-
-.trophy-modal-star-banner {
-  font-size: 1.4rem;
-  margin-bottom: 4px;
-}
-
-.trophy-modal-title {
-  font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif;
-  font-size: 1.9rem;
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: #ffd700;
-  text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-  margin-bottom: 6px;
-}
-
-.trophy-modal-badge {
-  display: inline-block;
-  background: linear-gradient(90deg, #7a1a12, #a82419, #7a1a12);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  padding: 4px 14px;
-  border-radius: 20px;
-  border: 1px solid #e5b869;
-  margin-bottom: 12px;
-}
-
-.trophy-modal-desc {
-  font-size: 0.88rem;
-  color: #f3ece5;
-  line-height: 1.4;
-  margin-bottom: 18px;
-}
-
-/* Mostrador del Trofeu */
-.trophy-display-wrapper {
-  position: relative;
-  display: inline-block;
-  margin: 6px auto 16px auto;
-}
-
-.trophy-glow-circle {
-  position: absolute;
-  inset: -15px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, rgba(255, 215, 0, 0) 70%);
-  pointer-events: none;
-}
-
-.trophy-3d-canvas-container {
-  width: 260px;
-  height: 320px;
-  margin: 0 auto;
-  border-radius: 16px;
-  overflow: hidden;
-  position: relative;
-  z-index: 2;
-  border: 2px solid #e5b869;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 35px rgba(229, 184, 105, 0.55);
-  background: radial-gradient(circle at 50% 35%, #2c1a0e 0%, #100804 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: grab;
-  touch-action: none;
-}
-
-.trophy-3d-canvas-container:active {
-  cursor: grabbing;
-}
-
-.trophy-3d-canvas-container canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  outline: none;
-}
-
-.trophy-3d-loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: #ffd700;
-  font-weight: 800;
-  font-size: 0.85rem;
-  background: rgba(16, 8, 4, 0.92);
-  z-index: 5;
-  transition: opacity 0.4s ease;
-}
-
-.trophy-spinner {
-  width: 38px;
-  height: 38px;
-  border: 3px solid rgba(255, 215, 0, 0.25);
-  border-top-color: #ffd700;
-  border-radius: 50%;
-  animation: spin 0.85s linear infinite;
-}
-
-.trophy-3d-hint {
-  font-size: 0.78rem;
-  color: #ffd700;
-  margin-top: 10px;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.trophy-glint-flare {
-  position: absolute;
-  top: 15%;
-  left: 20%;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 0 16px 6px rgba(255, 255, 255, 0.9), 0 0 25px 10px rgba(255, 215, 0, 0.8);
-  animation: trophyGlintFlash 3s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes trophyGlintFlash {
-  0%, 75% { opacity: 0; transform: scale(0.4); }
-  85% { opacity: 1; transform: scale(1.4); }
-  95%, 100% { opacity: 0; transform: scale(0.4); }
-}
-
-.trophy-sparkle-stars .tss {
-  position: absolute;
-  font-size: 16px;
-  animation: tssFloat 2.4s ease-in-out infinite alternate;
-}
-
-.tss-1 { top: -10px; left: -10px; animation-delay: 0.1s; }
-.tss-2 { top: -5px; right: -12px; animation-delay: 0.7s; }
-.tss-3 { bottom: 25px; left: -15px; animation-delay: 1.2s; }
-.tss-4 { bottom: 35px; right: -12px; animation-delay: 1.8s; }
-
-@keyframes tssFloat {
-  0% { transform: scale(0.8) translateY(0); opacity: 0.5; }
-  100% { transform: scale(1.3) translateY(-6px); opacity: 1; }
-}
-
-/* Placa d'honor daurada estil llautó noble */
-.trophy-pedestal-plaque {
-  background: linear-gradient(135deg, #781910 0%, #52110a 50%, #380804 100%);
-  border: 2px solid #d4af37;
-  border-radius: 8px;
-  padding: 12px 18px;
-  margin: 12px auto 18px auto;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), inset 0 0 0 1px #fff0a8, 0 0 15px rgba(212, 175, 55, 0.25);
-  max-width: 380px;
-  position: relative;
-}
-
-.plaque-title {
-  font-family: 'Cinzel', 'Montserrat', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-  color: #ffd966;
-  text-transform: uppercase;
-}
-
-.plaque-name {
-  font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
-  font-size: 1.45rem;
-  font-weight: 900;
-  color: #ffffff;
-  margin: 4px 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 0 10px rgba(255, 217, 102, 0.4);
-}
-
-.plaque-sub {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #e6be44;
-  letter-spacing: 1px;
-}
-
-.plaque-footer {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: #fce494;
-  letter-spacing: 1.5px;
-  margin-top: 6px;
-  opacity: 0.9;
-}
-
-.trophy-modal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.btn-trophy-download {
-  width: 100%;
-  padding: 12px 18px;
-  font-size: 1rem;
-  background: linear-gradient(135deg, #d4af37 0%, #f7dc6f 40%, #b38b1b 80%, #f9e79f 100%);
-  border: 1.5px solid #805c0d;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  color: #3d2605;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.btn-trophy-download:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.65);
-  background: linear-gradient(135deg, #dfbc45 0%, #fae58c 40%, #c49924 80%, #faecaf 100%);
-}
-
-.btn-trophy-download:active {
-  transform: translateY(0);
-}
-
-.btn-trophy-continue {
-  width: 100%;
-  padding: 10px;
-  font-size: 0.92rem;
-  background: linear-gradient(135deg, #7a1a12 0%, #a82419 100%);
-  border: 1.5px solid #d4af37;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 14px rgba(122, 26, 18, 0.5);
-  cursor: pointer;
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  transition: all 0.2s ease;
-}
-
-.btn-trophy-continue:hover {
-  background: linear-gradient(135deg, #8c1e15 0%, #b8281b 100%);
-  transform: translateY(-1px);
-}
-
-/* Partícules de confeti daurat */
-.victory-confetti-particle {
-  position: fixed;
-  pointer-events: none;
-  z-index: 100000;
-  user-select: none;
-  will-change: transform, opacity;
-  animation: confettiFall ease-out forwards;
-}
-
-@keyframes confettiFall {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--cx), var(--cy)) rotate(var(--crot)) scale(0.6);
-  }
-}
-
-/* Adaptació mòbil per a la insígnia del trofeu i el modal de celebració / diploma */
-@media (max-width: 768px) {
-  .trophy-title-badge {
-    margin-top: 6px;
-    padding: 6px 8px;
-  }
-  .trophy-header-3d-container {
-    width: 95px;
-    height: 110px;
-  }
-  .trophy-badge-info .tb-tag {
-    font-size: 0.66rem;
-  }
-  .trophy-badge-info .tb-name {
-    font-size: 0.58rem;
-  }
-
-  /* Modal de celebració i diploma a mòbil */
-  .modal-trophy-card {
-    width: 94%;
-    max-height: 94vh;
-    padding: 18px 14px 16px 14px;
-    border-radius: 16px;
-  }
-  .trophy-modal-halo {
-    width: 220px;
-    height: 220px;
-    top: -50px;
-  }
-  .trophy-modal-star-banner {
-    font-size: 1.15rem;
-    margin-bottom: 2px;
-  }
-  .trophy-modal-title {
-    font-size: 1.55rem;
-    letter-spacing: 1.5px;
-    margin-bottom: 4px;
-  }
-  .trophy-modal-badge {
-    font-size: 0.72rem;
-    padding: 3px 10px;
-    margin-bottom: 8px;
-  }
-  .trophy-modal-desc {
-    font-size: 0.8rem;
-    margin-bottom: 8px;
-    line-height: 1.35;
-  }
-  .trophy-display-wrapper {
-    margin: 4px auto 8px auto;
-  }
-  .trophy-3d-canvas-container {
-    width: 190px;
-    height: 220px;
-    border-radius: 12px;
-  }
-  .trophy-3d-hint {
-    font-size: 0.7rem;
-    margin-top: 6px;
-  }
-  .trophy-pedestal-plaque {
-    padding: 8px 12px;
-    margin: 8px auto 10px auto;
-    max-width: 320px;
-  }
-  .plaque-title {
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-  }
-  .plaque-name {
-    font-size: 1.15rem;
-    margin: 1px 0;
-  }
-  .plaque-sub {
-    font-size: 0.68rem;
-  }
-  .plaque-footer {
-    font-size: 0.58rem;
-    margin-top: 2px;
-  }
-  .trophy-modal-actions {
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .btn-trophy-download {
-    padding: 10px 14px;
-    font-size: 0.9rem;
-  }
-  .btn-trophy-continue {
-    padding: 9px 12px;
-    font-size: 0.86rem;
-  }
-}
 
 /* ==========================================================================
    ESTILS PER AL MODE SATÈL·LIT (CONTRAST MÀXIM AMB TEXT BEIX I DAURAT)
@@ -2725,6 +2253,24 @@ body.map-mode-satellite .btn-drawer-pdf:hover {
   color: #2a1508;
 }
 
+body.map-mode-satellite .btn-floating-wikiloc {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.14) 100%);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.65);
+}
+
+body.map-mode-satellite .btn-floating-wikiloc:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.24) 100%);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+body.map-mode-satellite .btn-floating-wikiloc .wikiloc-text {
+  color: #fdfbf7;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
 /* 3. Adaptació mòbil per al mode satèl·lit */
 @media (max-width: 768px) {
   body.map-mode-satellite .app-top-header {
@@ -2764,6 +2310,5 @@ body.map-mode-satellite .btn-drawer-pdf:hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
   }
 }
-
 
 

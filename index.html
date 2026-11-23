@@ -11,7 +11,7 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   
-  <!-- Google Fonts per al Diploma Oficial d'Honor i la interfície -->
+  <!-- Google Fonts per a la interfície -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800;900&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,600&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,400;1,700&display=swap" rel="stylesheet">
@@ -25,9 +25,6 @@
   <main class="main-content">
     <div id="map"></div>
 
-    <!-- CANVAS D'EFECTES CONTINUS PER A GUANYADORS (NEU + CONFETI TOT EL RATO) -->
-    <canvas id="victory-effects-canvas"></canvas>
-
     <!-- CAPÇALERA SUPERIOR (FLOTANT I ADAPTADA PER ESCRIPTORI I MÒBIL) -->
     <header class="app-top-header" id="app-top-header">
       <!-- TÍTOL FLOTANT (A MÒBIL INTEGRAT AMB ESTIL NET I A ESCRIPTORI A LA DRETA SENSE FONS) -->
@@ -35,23 +32,6 @@
         <span class="title-line-1">RUTA DELS</span>
         <span class="title-line-2">PESSEBRES</span>
         <span class="title-line-3">2026</span>
-
-        <!-- TROFEU PERMANENT 3D SOTA EL TÍTOL (QUAN S'HA COMPLETAT EL 100% DELS PESSEBRES) -->
-        <div id="trophy-title-badge" class="trophy-title-badge" style="display: none;" title="🏆 Has completat el 100% de la ruta! Clica per admirar el trofeu en 3D">
-          <div class="trophy-badge-glow"></div>
-          
-          <!-- Contenidor 3D del trofeu girant continu sota el títol -->
-          <div id="trophy-header-3d-container" class="trophy-header-3d-container">
-            <div id="trophy-header-3d-loading" class="trophy-header-3d-loading">
-              <div class="trophy-header-spinner"></div>
-            </div>
-          </div>
-
-          <div class="trophy-badge-info">
-            <span class="tb-tag">🏆 GUANYADOR 2026</span>
-            <span class="tb-name">MÀSTER PESSEBRISTA</span>
-          </div>
-        </div>
       </div>
 
       <!-- BOTONS I ESTADÍSTIQUES FLOTANTS SUPERIORS -->
@@ -115,6 +95,12 @@
         </button>
       </div>
     </div>
+
+    <!-- BOTÓ WIKILOC LIQUID GLASS (INFERIOR DRETA, A SOBRE D'AFEGIR PESSEBRE) -->
+    <a href="https://es.wikiloc.com/wikiloc/user.do?id=20285761" target="_blank" rel="noopener noreferrer" class="btn-floating-wikiloc" id="btn-wikiloc-tracks" aria-label="Tracks Oficials a Wikiloc">
+      <img src="wikiloc_logo.png" alt="Wikiloc Logo" class="wikiloc-logo">
+      <span class="wikiloc-text">Tracks Oficials</span>
+    </a>
 
     <!-- BOTÓ VISIBLE: + AFEGEIX UN PESSEBRE (INFERIOR DRETA) -->
     <button class="btn-floating-add" id="btn-open-add-pessebre">
@@ -356,68 +342,6 @@
     </div>
   </div>
 
-  <!-- ----------------------------------------------------------------------
-       MODAL 6: CELEBRACIÓ I DETALL DEL TROFEU OFICIAL (100% COMPLETAT)
-       ---------------------------------------------------------------------- -->
-  <div class="modal-overlay" id="modal-trophy">
-    <div class="modal-card modal-trophy-card">
-      <button class="btn-close-modal" id="btn-close-trophy">&times;</button>
-      <div class="trophy-modal-halo"></div>
-      <div class="trophy-modal-body">
-        <div class="trophy-modal-header">
-          <div class="trophy-modal-star-banner">✨ 🌟 ✨</div>
-          <h2 class="trophy-modal-title">ENHORABONA!</h2>
-          <div class="trophy-modal-badge">🏆 HAS COMPLETAT TOTS ELS PESSEBRES 🏆</div>
-          <p class="trophy-modal-desc">
-            Has visitat amb èxit tots els <strong id="trophy-total-points">19</strong> pessebres oficials de la Ruta dels Pessebres de Sant Feliu Sasserra!
-          </p>
-        </div>
-
-        <div class="trophy-display-wrapper">
-          <div class="trophy-light-rays"></div>
-          <div class="trophy-glow-circle"></div>
-          
-          <!-- Contenidor interactiu 3D (Three.js OBJLoader) -->
-          <div id="trophy-3d-canvas-container" class="trophy-3d-canvas-container">
-            <div id="trophy-3d-loading" class="trophy-3d-loading">
-              <div class="trophy-spinner"></div>
-              <span>Carregant escultura 3D...</span>
-            </div>
-          </div>
-
-          <div class="trophy-glint-flare"></div>
-          <div class="trophy-sparkle-stars">
-            <span class="tss tss-1">✨</span>
-            <span class="tss tss-2">⭐</span>
-            <span class="tss tss-3">🌟</span>
-            <span class="tss tss-4">✨</span>
-          </div>
-          <div id="trophy-3d-hint" class="trophy-3d-hint">
-            🔄 Girant en 3D continu · Pots arrossegar amb el ratolí o dit per girar-lo
-          </div>
-        </div>
-
-        <div class="trophy-pedestal-plaque">
-          <div class="plaque-border">
-            <div class="plaque-title">DIPLOMA D'HONOR</div>
-            <div class="plaque-name" id="trophy-user-name">Usuari</div>
-            <div class="plaque-sub">Màster Pessebrista · Edició Oficial 2026</div>
-            <div class="plaque-footer">CLUB EXCURSIONISTA BANDOLERS · SANT FELIU SASSERRA</div>
-          </div>
-        </div>
-
-        <div class="trophy-modal-actions">
-          <button type="button" class="btn-trophy-download" id="btn-download-diploma">
-            <span>📜</span> Descarregar Diploma Oficial (PDF)
-          </button>
-          <button type="button" class="btn-primary btn-trophy-continue" id="btn-trophy-ok">
-            🎉 Exhibir Trofeu
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- TOAST NOTIFICACIÓ -->
   <div class="toast-notification" id="toast-notification"></div>
 
@@ -430,16 +354,9 @@
   <!-- Supabase Client JS (v2) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Three.js + Loaders per a suport 3D OBJ del Trofeu -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
   <!-- Configuració i Base de Dades -->
   <script src="config.js"></script>
   <script src="db.js"></script>
-  <script src="logo_data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
