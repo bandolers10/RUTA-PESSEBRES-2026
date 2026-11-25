@@ -1598,8 +1598,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 14. EXPORTACIÓ DIRECTA DEL CARTELL I MAPA A4 (ULTRA RÀPID I FIABLE)
+  // 14. EXPORTACIÓ DIRECTA DEL CARTELL I MAPA A4 (ULTRA RÀPID, PRECÍS I ESCALABLE FINS A 50+ PESSEBRES)
+  let isExportingA4 = false;
+
   window.exportA4Document = async function() {
+    if (isExportingA4) return;
+    isExportingA4 = true;
+
     const btn = document.getElementById('btn-drawer-pdf');
     if (btn) {
       btn.disabled = true;
@@ -1620,38 +1625,65 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // Bounding box dinàmic que envolta tots els pessebres de Sant Feliu Sasserra
-    let minLng = 2.000, maxLng = 2.038;
-    let minLat = 41.928, maxLat = 41.963;
-
-    if (points.length > 0) {
-      const lats = points.map(p => Number(p.latitude)).filter(n => !isNaN(n));
-      const lngs = points.map(p => Number(p.longitude)).filter(n => !isNaN(n));
-      if (lats.length > 0 && lngs.length > 0) {
-        const pMinLat = Math.min(...lats);
-        const pMaxLat = Math.max(...lats);
-        const pMinLng = Math.min(...lngs);
-        const pMaxLng = Math.max(...lngs);
-
-        const latMargin = Math.max((pMaxLat - pMinLat) * 0.12, 0.005);
-        const lngMargin = Math.max((pMaxLng - pMinLng) * 0.12, 0.005);
-
-        minLat = Number((pMinLat - latMargin).toFixed(4));
-        maxLat = Number((pMaxLat + latMargin).toFixed(4));
-        minLng = Number((pMinLng - lngMargin).toFixed(4));
-        maxLng = Number((pMaxLng + lngMargin).toFixed(4));
-      }
-    }
-
     const mapW = 1380;
     const mapH = 1335;
     const mapX = 75;
     const mapY = 245;
 
-    // Descarreguem la imatge del mapa mitjançant fetch per garantir que el canvas no quedi buit
+    // Projecció Web Mercator (EPSG:3857) per a coincidència exacta 1:1 amb Leaflet i sense deformació
+    const EARTH_R = 6378137;
+    const lngToMercX = (lng) => EARTH_R * ((Number(lng) * Math.PI) / 180);
+    const latToMercY = (lat) => EARTH_R * Math.log(Math.tan(Math.PI / 4 + ((Number(lat) * Math.PI) / 180) / 2));
+
+    let minLng = 2.002, maxLng = 2.036;
+    let minLat = 41.930, maxLat = 41.963;
+
+    if (points.length > 0) {
+      const lats = points.map(p => Number(p.latitude)).filter(n => !isNaN(n));
+      const lngs = points.map(p => Number(p.longitude)).filter(n => !isNaN(n));
+      if (lats.length > 0 && lngs.length > 0) {
+        minLat = Math.min(...lats);
+        maxLat = Math.max(...lats);
+        minLng = Math.min(...lngs);
+        maxLng = Math.max(...lngs);
+      }
+    }
+
+    let minX = lngToMercX(minLng);
+    let maxX = lngToMercX(maxLng);
+    let minY = latToMercY(minLat);
+    let maxY = latToMercY(maxLat);
+
+    // Marge del 14% al voltant dels punts (mínim 600 metres)
+    const padX = Math.max((maxX - minX) * 0.14, 600);
+    const padY = Math.max((maxY - minY) * 0.14, 600);
+    minX -= padX;
+    maxX += padX;
+    minY -= padY;
+    maxY += padY;
+
+    // Ajustar el bounding box a la proporció exacta del marc del mapa (mapW / mapH)
+    // Així ArcGIS no altera l'enquadrament i cada marcador cau al mil·límetre exacte
+    const targetAspect = mapW / mapH;
+    const curSpanX = maxX - minX;
+    const curSpanY = maxY - minY;
+    if (curSpanX / curSpanY > targetAspect) {
+      const newSpanY = curSpanX / targetAspect;
+      const centerY = (minY + maxY) / 2;
+      minY = centerY - newSpanY / 2;
+      maxY = centerY + newSpanY / 2;
+    } else {
+      const newSpanX = curSpanY * targetAspect;
+      const centerX = (minX + maxX) / 2;
+      minX = centerX - newSpanX / 2;
+      maxX = centerX + newSpanX / 2;
+    }
+
+    // Descarreguem la imatge del mapa en alta resolució (EPSG:3857)
     async function loadMap() {
-      const primaryUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${minLng},${minLat},${maxLng},${maxLat}&bboxSR=4326&imageSR=4326&size=960,880&format=jpg&f=image&_t=${Date.now()}`;
-      const fallbackUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${minLng},${minLat},${maxLng},${maxLat}&bboxSR=4326&imageSR=4326&size=800,600&format=jpg&f=image`;
+      const bbox3857 = `${minX.toFixed(2)},${minY.toFixed(2)},${maxX.toFixed(2)},${maxY.toFixed(2)}`;
+      const primaryUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${bbox3857}&bboxSR=3857&imageSR=3857&size=${mapW},${mapH}&dpi=144&format=jpg&f=image&_t=${Date.now()}`;
+      const fallbackUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${bbox3857}&bboxSR=3857&imageSR=3857&size=960,929&format=jpg&f=image`;
 
       const tryFetch = async (url) => {
         const ctrl = new AbortController();
@@ -1709,6 +1741,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fillStyle = '#7a1a12';
       ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
       ctx.fillText('🎄 RUTA OFICIAL 2026', 75, 105);
 
       // TÍTOL PRINCIPAL
@@ -1759,32 +1792,35 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.lineWidth = 4;
       ctx.strokeRect(mapX, mapY, mapW, mapH);
 
-      // Plot dels marcadors numerats sobre el mapa
+      // Escalar radi dels marcadors del mapa segons la quantitat de pessebres perquè no es tapin
+      const pinR = points.length > 38 ? 15 : (points.length > 22 ? 17.5 : 20);
+      const pinFs = points.length > 38 ? 14 : (points.length > 22 ? 16 : 18);
+
+      // Plot dels marcadors numerats sobre el mapa (amb projecció Mercator exacta)
       points.forEach((pt, idx) => {
         const num = idx + 1;
-        const mx = mapX + ((pt.longitude - minLng) / (maxLng - minLng)) * mapW;
-        const my = mapY + ((maxLat - pt.latitude) / (maxLat - minLat)) * mapH;
+        const ptX = lngToMercX(pt.longitude);
+        const ptY = latToMercY(pt.latitude);
+        const mx = mapX + ((ptX - minX) / (maxX - minX)) * mapW;
+        const my = mapY + ((maxY - ptY) / (maxY - minY)) * mapH;
 
-        // Ombra
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 3;
+        ctx.shadowColor = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur = 7;
+        ctx.shadowOffsetY = 2.5;
 
-        // Cercle vermell exterior
         ctx.beginPath();
-        ctx.arc(mx, my, 20, 0, Math.PI * 2);
+        ctx.arc(mx, my, pinR, 0, Math.PI * 2);
         ctx.fillStyle = '#b81414';
         ctx.fill();
 
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth = points.length > 38 ? 2.8 : 3.5;
         ctx.strokeStyle = '#ffffff';
         ctx.stroke();
         ctx.restore();
 
-        // Número centrat
         ctx.fillStyle = '#ffffff';
-        ctx.font = '900 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = `900 ${pinFs}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(num), mx, my);
@@ -1804,158 +1840,243 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Títol Índex
       ctx.fillStyle = '#7a1a12';
-      ctx.font = '900 30px "Bodoni Moda", "Playfair Display", Georgia, serif';
+      ctx.font = '900 28px "Bodoni Moda", "Playfair Display", Georgia, serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText('ÍNDEX DE PESSEBRES', idxX + idxW / 2, idxY + 45);
+      ctx.fillText(`ÍNDEX DE PESSEBRES (${points.length})`, idxX + idxW / 2, idxY + 42);
 
       ctx.strokeStyle = '#e0d0c4';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(idxX + 30, idxY + 60);
-      ctx.lineTo(idxX + idxW - 30, idxY + 60);
+      ctx.moveTo(idxX + 25, idxY + 56);
+      ctx.lineTo(idxX + idxW - 25, idxY + 56);
       ctx.stroke();
 
       const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
-      // Trenca el nom en línies segons l'amplada real en píxels (MAI amb '...')
-      function wrapPx(text, maxW) {
+      // Caixa d'informació pràctica compacta a baix en 2 columnes (deixa +120px més d'espai per a l'índex)
+      const infoH = 185;
+      const infoY = idxY + idxH - 20 - infoH;
+      const startListY = idxY + 70;
+      const listAvailH = infoY - 14 - startListY;
+
+      // Funció que trenca el text per línies assegurant que CAP paraula desbordi maxW
+      function wrapPxStrict(text, maxW) {
         if (!text) return [''];
-        const words = text.split(' ');
+        const normalized = text.replace(/\s*\/\s*/g, ' / ');
+        const rawWords = normalized.split(/\s+/);
+        const words = [];
+        // Si alguna paraula sola és més ampla que maxW, la partim amb guionet
+        for (const w of rawWords) {
+          if (ctx.measureText(w).width <= maxW || w.length <= 4) {
+            words.push(w);
+          } else {
+            let chunk = '';
+            for (const ch of w) {
+              if (ctx.measureText(chunk + ch + '-').width > maxW && chunk.length >= 3) {
+                words.push(chunk + '-');
+                chunk = ch;
+              } else {
+                chunk += ch;
+              }
+            }
+            if (chunk) words.push(chunk);
+          }
+        }
+
         const lines = [];
         let cur = '';
         for (const w of words) {
           const test = cur ? cur + ' ' + w : w;
-          if (ctx.measureText(test).width <= maxW || !cur) {
+          if (ctx.measureText(test).width <= maxW) {
             cur = test;
           } else {
-            lines.push(cur);
+            if (cur) lines.push(cur);
             cur = w;
           }
         }
         if (cur) lines.push(cur);
-        return lines;
+        return lines.length > 0 ? lines : [''];
       }
 
-      // Caixa d'informació pràctica enganxada a baix (posició calculada primer)
-      const infoLineSpacing = 30;
-      const infoH = 74 + 8 * infoLineSpacing + 16;
-      const infoY = idxY + idxH - 25 - infoH;
-
-      // Índex dinàmic: busquem columnes + mida de lletra perquè tot hi càpiga
-      const startListY = idxY + 76;
-      const listAvailH = infoY - 15 - startListY;
-
-      function buildLayout(numCols, fs) {
-        const colW = (idxW - 40) / numCols;
-        const badgeR = Math.round(fs * 0.95);
-        const textOffset = badgeR * 2 + 8;
-        const lineH = Math.round(fs * 1.25);
-        const authorH = Math.round(fs * 0.8) + 4;
-        const gap = Math.round(fs * 0.7);
-        ctx.font = `bold ${fs}px ${FONT}`;
-        const items = points.map(pt => {
-          const lines = wrapPx(pt.name, colW - textOffset - 10);
-          return { pt, lines, h: Math.max(lines.length * lineH + authorH, badgeR * 2) + gap };
-        });
-        // Repartim seqüencialment per columnes equilibrant l'altura
-        const total = items.reduce((s, it) => s + it.h, 0);
-        const target = total / numCols;
-        const cols = [[]];
-        let acc = 0;
-        items.forEach(it => {
-          if (acc + it.h / 2 > target * cols.length && cols.length < numCols) cols.push([]);
-          cols[cols.length - 1].push(it);
-          acc += it.h;
-        });
-        const maxColH = Math.max(...cols.map(c => c.reduce((s, it) => s + it.h, 0)));
-        return { numCols, fs, colW, badgeR, textOffset, lineH, authorH, cols, fits: maxColH <= listAvailH };
-      }
-
-      let layout = null;
-      outer:
-      for (let fs = 15; fs >= 9; fs--) {
-        for (let nc = 2; nc <= 4; nc++) {
-          const l = buildLayout(nc, fs);
-          if (l.fits) { layout = l; break outer; }
+      // Trunca l'autor amb '…' si és més llarg que l'amplada de columna
+      function fitSingleLinePx(text, maxW) {
+        if (ctx.measureText(text).width <= maxW) return text;
+        let s = text;
+        while (s.length > 3 && ctx.measureText(s + '…').width > maxW) {
+          s = s.slice(0, -1);
         }
+        return s.trim() + '…';
       }
-      if (!layout) layout = buildLayout(4, 9);
 
-      let num = 0;
-      layout.cols.forEach((col, colIdx) => {
-        const colX = idxX + 20 + colIdx * layout.colW;
-        let itemY = startListY;
-        col.forEach(({ pt, lines, h }) => {
-          num++;
-          const { fs, badgeR, textOffset, lineH } = layout;
+      if (points.length === 0) {
+        ctx.fillStyle = '#7a6555';
+        ctx.font = `italic 22px ${FONT}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Encara no hi ha pessebres publicats a la ruta.', idxX + idxW / 2, startListY + listAvailH / 2);
+      } else {
+        function buildLayout(numCols, fs) {
+          const padXCol = 18;
+          const colGap = 12;
+          const colW = (idxW - padXCol * 2 - colGap * (numCols - 1)) / numCols;
+          const badgeR = Math.max(8, Math.round(fs * 0.92));
+          const textOffset = badgeR * 2 + 7;
+          const maxTextW = colW - textOffset - 4;
+          const lineH = Math.round(fs * 1.22);
+          const authorFs = Math.max(7, Math.round(fs * 0.78));
+          const authorH = authorFs + 3;
+          const gap = Math.max(4, Math.round(fs * 0.55));
 
-          // Insígnia número (cercle vermell fosc)
-          const badgeCenterY = itemY + badgeR;
-          ctx.beginPath();
-          ctx.arc(colX + badgeR, badgeCenterY, badgeR, 0, Math.PI * 2);
-          ctx.fillStyle = '#7a1a12';
-          ctx.fill();
+          let anyWordOverflow = false;
+          const items = points.map(pt => {
+            ctx.font = `bold ${fs}px ${FONT}`;
+            const lines = wrapPxStrict(pt.name, maxTextW);
+            for (const l of lines) {
+              if (ctx.measureText(l).width > maxTextW + 2) anyWordOverflow = true;
+            }
+            const rawAuthor = `👤 ${pt.submitted_by || 'Organització'}`;
+            ctx.font = `600 ${authorFs}px ${FONT}`;
+            const authorLine = fitSingleLinePx(rawAuthor, maxTextW);
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `900 ${fs}px ${FONT}`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(String(num), colX + badgeR, badgeCenterY);
-
-          // Nom del pessebre
-          ctx.fillStyle = '#2a1a14';
-          ctx.font = `bold ${fs}px ${FONT}`;
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          let curTextY = itemY;
-          lines.forEach(line => {
-            ctx.fillText(line, colX + textOffset, curTextY);
-            curTextY += lineH;
+            const contentH = lines.length * lineH + authorH;
+            const h = Math.max(contentH, badgeR * 2) + gap;
+            return { pt, lines, authorLine, h };
           });
 
-          // Subtítol autor a sota, més petit
-          const author = pt.submitted_by || 'Organització';
-          ctx.fillStyle = '#8c5338';
-          ctx.font = `600 ${Math.round(fs * 0.8)}px ${FONT}`;
-          ctx.fillText(`👤 ${author}`, colX + textOffset, curTextY + 1);
+          // Repartició equilibrada per columnes sense superar listAvailH
+          const totalH = items.reduce((s, it) => s + it.h, 0);
+          const idealColH = totalH / numCols;
+          const cols = Array.from({ length: numCols }, () => []);
+          let cIdx = 0;
+          let curColH = 0;
 
-          itemY += h;
+          items.forEach((it, idx) => {
+            const remainingItems = items.length - idx;
+            const remainingCols = numCols - cIdx;
+            if (
+              cIdx < numCols - 1 &&
+              curColH > 0 &&
+              (curColH + it.h > listAvailH || (curColH + it.h * 0.55 > idealColH && remainingItems >= remainingCols))
+            ) {
+              cIdx++;
+              curColH = 0;
+            }
+            cols[cIdx].push(it);
+            curColH += it.h;
+          });
+
+          const maxColH = Math.max(...cols.map(c => c.reduce((s, it) => s + it.h, 0)));
+          const fits = !anyWordOverflow && maxColH <= listAvailH;
+          return {
+            numCols, fs, authorFs, padXCol, colGap, colW, badgeR, textOffset, maxTextW, lineH, authorH, cols, maxColH, fits
+          };
+        }
+
+        // Prioritzem menys columnes (més amples i llegibles) quan hi ha pocs pessebres, i 3 columnes quan n'hi ha fins a 55
+        const candidateCols = points.length <= 22 ? [2, 3] : (points.length <= 55 ? [3, 4] : [3, 4]);
+        let layout = null;
+        outer:
+        for (const nc of candidateCols) {
+          for (let fs = 15; fs >= 9; fs -= 0.5) {
+            const l = buildLayout(nc, fs);
+            if (l.fits) {
+              layout = l;
+              break outer;
+            }
+          }
+        }
+        if (!layout) {
+          for (let fs = 11; fs >= 8; fs -= 0.5) {
+            const l = buildLayout(4, fs);
+            if (l.fits) { layout = l; break; }
+          }
+        }
+        if (!layout) layout = buildLayout(4, 8);
+
+        let num = 0;
+        layout.cols.forEach((col, colIdx) => {
+          const colX = idxX + layout.padXCol + colIdx * (layout.colW + layout.colGap);
+          let itemY = startListY;
+
+          col.forEach(({ lines, authorLine, h }) => {
+            num++;
+            const { fs, authorFs, badgeR, textOffset, lineH, colW } = layout;
+
+            // Clip de seguretat per columna perquè cap text pugui envair la columna veïna
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(colX - 2, itemY - 2, colW + 2, h + 2);
+            ctx.clip();
+
+            // Insígnia número (cercle vermell fosc)
+            const badgeCenterY = itemY + badgeR;
+            ctx.beginPath();
+            ctx.arc(colX + badgeR, badgeCenterY, badgeR, 0, Math.PI * 2);
+            ctx.fillStyle = '#7a1a12';
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `900 ${Math.round(fs * 0.92)}px ${FONT}`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(num), colX + badgeR, badgeCenterY);
+
+            // Nom del pessebre
+            ctx.fillStyle = '#2a1a14';
+            ctx.font = `bold ${fs}px ${FONT}`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            let curTextY = itemY;
+            lines.forEach(line => {
+              ctx.fillText(line, colX + textOffset, curTextY);
+              curTextY += lineH;
+            });
+
+            // Subtítol autor a sota
+            ctx.fillStyle = '#8c5338';
+            ctx.font = `600 ${authorFs}px ${FONT}`;
+            ctx.fillText(authorLine, colX + textOffset, curTextY + 1);
+
+            ctx.restore();
+            itemY += h;
+          });
         });
-      });
+      }
 
-      // Caixa d'informació pràctica
+      // Caixa d'informació pràctica a baix (disseny net en 2 columnes)
       ctx.fillStyle = '#f3ebe0';
-      ctx.fillRect(idxX + 25, infoY, idxW - 50, infoH);
+      ctx.fillRect(idxX + 20, infoY, idxW - 40, infoH);
       ctx.strokeStyle = '#c4b49e';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(idxX + 25, infoY, idxW - 50, infoH);
+      ctx.strokeRect(idxX + 20, infoY, idxW - 40, infoH);
 
       ctx.fillStyle = '#522415';
-      ctx.font = '900 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = `900 19px ${FONT}`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillText('ℹ️ INFORMACIÓ PRÀCTICA I NORMES', idxX + 45, infoY + 24);
+      ctx.fillText('ℹ️ INFORMACIÓ PRÀCTICA I NORMES DE LA RUTA', idxX + 36, infoY + 18);
 
       ctx.fillStyle = '#4a382c';
-      ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const lineSpacing = infoLineSpacing;
-      let lineY = infoY + 74;
-
-      const infoLines = [
-        '• Ruta circular pel terme de Sant Feliu Sasserra.',
-        '• Apte per fer a peu, caminant o en bicicleta (BTT).',
-        '• Recomanem portar calçat de muntanya i aigua.',
-        '• Respecteu els pessebres, les figures i el medi natural.',
-        '• No deixeu deixalles ni malmeteu els camins.',
-        '• Podeu marcar els visitats des de la web oficial:',
-        '  eloibertranscb.github.io/RUTA-PESSEBRES-2026',
-        '• En cas d\'emergències truqueu al 112.'
+      ctx.font = `600 15px ${FONT}`;
+      const infoLeft = [
+        '• Ruta circular per Sant Feliu Sasserra.',
+        '• Apte a peu, caminant o en BTT.',
+        '• Porteu calçat de muntanya i aigua.',
+        '• Respecteu els pessebres i l\'entorn.'
+      ];
+      const infoRight = [
+        '• No deixeu deixalles als camins.',
+        '• Tracks GPX al Wikiloc CE Bandolers.',
+        '• Web: eloibertranscb.github.io/RUTA-PESSEBRES-2026',
+        '• Emergències: truqueu al 112.'
       ];
 
-      infoLines.forEach(l => {
-        ctx.fillText(l, idxX + 45, lineY);
-        lineY += lineSpacing;
+      infoLeft.forEach((l, i) => {
+        ctx.fillText(l, idxX + 36, infoY + 54 + i * 29);
+      });
+      infoRight.forEach((l, i) => {
+        ctx.fillText(l, idxX + 410, infoY + 54 + i * 29);
       });
 
       // 5. Descarregar fitxer directe en PDF o Imatge
@@ -1985,6 +2106,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error generant document:', err);
       showToast('⚠️ Error al generar el document: ' + err.message);
     } finally {
+      isExportingA4 = false;
       if (mapResult && mapResult.objUrl) {
         URL.revokeObjectURL(mapResult.objUrl);
       }

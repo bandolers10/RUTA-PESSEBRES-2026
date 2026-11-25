@@ -1,0 +1,17 @@
+name: Mantenir Supabase Actiu 24/7 (Gratuït)
+
+on:
+  schedule:
+    # S'executa automàticament cada 3 dies a les 08:00 UTC perquè Supabase no es pausi mai
+    - cron: '0 8 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping a la base de dades de la Ruta dels Pessebres
+        run: |
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+            "https://oeyyxnbcgdbersedlifu.supabase.co/rest/v1/nativity_points?select=id&limit=1" \
+            -H "apikey: sb_publishable_MaPuqlC8D0lsDqZ7sG4PMQ_12QIZn6C"

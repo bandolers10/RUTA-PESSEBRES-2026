@@ -16,10 +16,10 @@ window.IS_DEMO_MODE = IS_DEMO_MODE;
 
 const DB_KEYS = IS_DEMO_MODE
   ? {
-      USERS: 'pessebres_2026_demo_users_v1',
-      POINTS: 'pessebres_2026_demo_points_v1',
-      VISITS: 'pessebres_2026_demo_visits_v1',
-      CURRENT_USER: 'pessebres_2026_demo_current_user_v1',
+      USERS: 'pessebres_2026_demo_users_v2',
+      POINTS: 'pessebres_2026_demo_points_v2',
+      VISITS: 'pessebres_2026_demo_visits_v2',
+      CURRENT_USER: 'pessebres_2026_demo_current_user_v2',
       GEOCACHE: 'pessebres_2026_muni_geocache'
     }
   : {
@@ -437,8 +437,8 @@ function buildDemoDataset() {
       const lnRaw = lastNames[(uIdx * 11 + c * 5) % lastNames.length].trim();
       const ln = lnRaw.charAt(0).toUpperCase() + lnRaw.slice(1);
       const username = (fn === 'Família' || fn === 'Colla' || fn === 'Grup')
-        ? `${fn} ${ln} #${uIdx}`
-        : `${fn} ${ln} ${uIdx > 120 ? '(' + muniName.split(' ')[0] + ')' : ''}`.trim();
+        ? `${fn} ${ln}`
+        : `${fn} ${ln}`.trim();
 
       users.push({
         id: `demo_usr_${uIdx}`,
@@ -497,7 +497,7 @@ function buildDemoDataset() {
     ['COLLET DE SANT PERE', 41.9498, 2.0055, 'A la carena de ponent del terme.'],
     ['BAUMA DE LA GUINEU', 41.9545, 2.0062, 'Sota una gran llosa de pedra inclinada.'],
     ['PINEDA DE CAN SOLER', 41.9612, 2.0102, 'Al cor de la pineda de pi roig.'],
-    ['TORRENT DELSBOIXOS', 41.9578, 2.0182, 'Camí vorejat de boixos centenaris.'],
+    ['TORRENT DELS BOIXOS', 41.9578, 2.0182, 'Camí vorejat de boixos centenaris.'],
     ['POU DE GLAÇ ANTIC', 41.9435, 2.0235, 'Junt a l\'estructura de pedra de l\'antic pou de glaç.'],
     ['MIRADOR DE MONTSERRAT', 41.9315, 2.0175, 'Punt des d\'on s\'albira la serra de Montserrat.'],
     ['PLAÇA DE L\'AJUNTAMENT VELL', 41.9458, 2.0218, 'Al centre històric de Sant Feliu Sasserra.'],
@@ -844,6 +844,8 @@ class PessebresDB {
   async syncFromCloud() {
     if (this.isDemo || !this.isCloudEnabled || !this.supabase) return;
     try {
+      const LAUNCH_CUTOFF = '2026-11-25T20:45:00Z';
+
       const [resUsers, resPoints, resVisits] = await Promise.all([
         this.supabase.from('users').select('id, username, email, role, created_at'),
         this.supabase.from('nativity_points').select('*'),
@@ -851,7 +853,21 @@ class PessebresDB {
       ]);
 
       if (!resUsers.error && resUsers.data) {
-        const sanitizedUsers = resUsers.data.map(u => this.sanitizeUserObject(u));
+        // Esborrar automàticament del núvol qualsevol usuari de prova antic d'abans de deixar la web en blanc
+        const oldTestUsers = resUsers.data.filter(
+          u => u.role !== 'ADMIN' && u.id !== 'usr_admin' && (!u.created_at || u.created_at < LAUNCH_CUTOFF)
+        );
+        if (oldTestUsers.length > 0) {
+          oldTestUsers.forEach(u => {
+            this.supabase.from('visits').delete().eq('user_id', u.id).then();
+            this.supabase.from('users').delete().eq('id', u.id).then();
+          });
+        }
+
+        const validUsers = resUsers.data.filter(
+          u => u.role === 'ADMIN' || u.id === 'usr_admin' || (u.created_at && u.created_at >= LAUNCH_CUTOFF)
+        );
+        const sanitizedUsers = validUsers.map(u => this.sanitizeUserObject(u));
         localStorage.setItem(DB_KEYS.USERS, JSON.stringify(sanitizedUsers));
 
         const current = this.getCurrentUser();
@@ -864,11 +880,23 @@ class PessebresDB {
       }
       if (!resPoints.error && resPoints.data) {
         const deletedIds = this.getDeletedPointIds();
-        const cleanCloud = resPoints.data.filter(p => !deletedIds.has(p.id));
+        // Esborrar automàticament del núvol qualsevol pessebre antic d'abans de deixar la web en blanc
+        const oldPoints = resPoints.data.filter(p => !p.created_at || p.created_at < LAUNCH_CUTOFF);
+        if (oldPoints.length > 0) {
+          oldPoints.forEach(p => {
+            this.supabase.from('visits').delete().eq('nativity_point_id', p.id).then();
+            this.supabase.from('nativity_points').delete().eq('id', p.id).then();
+          });
+        }
+
+        const cleanCloud = resPoints.data.filter(
+          p => !deletedIds.has(p.id) && p.created_at && p.created_at >= LAUNCH_CUTOFF
+        );
         localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(cleanCloud));
       }
       if (!resVisits.error && resVisits.data) {
-        localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(resVisits.data));
+        const validVisits = resVisits.data.filter(v => v.created_at && v.created_at >= LAUNCH_CUTOFF);
+        localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(validVisits));
       }
 
       window.dispatchEvent(new CustomEvent('db:changed'));
