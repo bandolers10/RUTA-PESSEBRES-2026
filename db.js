@@ -16,10 +16,10 @@ window.IS_DEMO_MODE = IS_DEMO_MODE;
 
 const DB_KEYS = IS_DEMO_MODE
   ? {
-      USERS: 'pessebres_2026_demo_users_v2',
-      POINTS: 'pessebres_2026_demo_points_v2',
-      VISITS: 'pessebres_2026_demo_visits_v2',
-      CURRENT_USER: 'pessebres_2026_demo_current_user_v2',
+      USERS: 'pessebres_2026_demo_users_v3',
+      POINTS: 'pessebres_2026_demo_points_v3',
+      VISITS: 'pessebres_2026_demo_visits_v3',
+      CURRENT_USER: 'pessebres_2026_demo_current_user_v3',
       GEOCACHE: 'pessebres_2026_muni_geocache'
     }
   : {
@@ -117,8 +117,8 @@ function sha256Hex(ascii) {
 // CATÀLEG DE MUNICIPIS DE CATALUNYA AMB COORDENADES (PER AUTOCOMPLETAT I HEATMAP)
 // ============================================================================
 const CATALONIA_MUNICIPALITIES = [
-  // Lluçanès
-  { name: 'Sant Feliu Sasserra', comarca: 'Lluçanès', lat: 41.9461, lng: 2.0211 },
+  // Sant Feliu Sasserra (Bages) i municipis propers
+  { name: 'Sant Feliu Sasserra', comarca: 'Bages', lat: 41.9461, lng: 2.0211 },
   { name: 'Prats de Lluçanès', comarca: 'Lluçanès', lat: 42.0084, lng: 2.0311 },
   { name: 'Olost', comarca: 'Lluçanès', lat: 41.9866, lng: 2.0964 },
   { name: 'Santa Creu de Jutglar (Olost)', comarca: 'Lluçanès', lat: 41.9765, lng: 2.0695 },
@@ -128,15 +128,15 @@ const CATALONIA_MUNICIPALITIES = [
   { name: 'Lluçà', comarca: 'Lluçanès', lat: 42.0681, lng: 2.0736 },
   { name: 'Santa Eulàlia de Puig-oriol (Lluçà)', comarca: 'Lluçanès', lat: 42.0645, lng: 2.0725 },
   { name: 'Sant Martí d\'Albars', comarca: 'Lluçanès', lat: 42.0289, lng: 2.0744 },
-  { name: 'Sant Boi de Lluçanès', comarca: 'Lluçanès', lat: 42.0578, lng: 2.1525 },
+  { name: 'Sant Boi de Lluçanès', comarca: 'Osona', lat: 42.0578, lng: 2.1525 },
   { name: 'Sobremunt', comarca: 'Lluçanès', lat: 42.0358, lng: 2.1667 },
   { name: 'Alpens', comarca: 'Lluçanès', lat: 42.1200, lng: 2.1014 },
-  { name: 'Sant Agustí de Lluçanès', comarca: 'Lluçanès', lat: 42.0861, lng: 2.1278 },
-  { name: 'Sant Bartomeu del Grau', comarca: 'Lluçanès / Osona', lat: 41.9853, lng: 2.1722 },
+  { name: 'Sant Agustí de Lluçanès', comarca: 'Osona', lat: 42.0861, lng: 2.1278 },
+  { name: 'Sant Bartomeu del Grau', comarca: 'Osona', lat: 41.9853, lng: 2.1722 },
 
   // Bages
   { name: 'Avinyó', comarca: 'Bages', lat: 41.8631, lng: 1.9717 },
-  { name: 'Santa Maria d\'Oló', comarca: 'Moianès / Bages', lat: 41.8744, lng: 2.0350 },
+  { name: 'Santa Maria d\'Oló', comarca: 'Moianès', lat: 41.8744, lng: 2.0350 },
   { name: 'Artés', comarca: 'Bages', lat: 41.7981, lng: 1.9547 },
   { name: 'Sallent', comarca: 'Bages', lat: 41.8258, lng: 1.8950 },
   { name: 'Balsareny', comarca: 'Bages', lat: 41.8633, lng: 1.8769 },
@@ -426,7 +426,7 @@ function buildDemoDataset() {
   }
 
   const users = [
-    { id: 'usr_admin', username: 'admin', municipality: 'Sant Feliu Sasserra', comarca: 'Lluçanès', lat: 41.9461, lng: 2.0211, role: 'ADMIN', created_at: '2026-11-01T09:00:00Z' }
+    { id: 'usr_admin', username: 'admin', municipality: 'Sant Feliu Sasserra', comarca: 'Bages', lat: 41.9461, lng: 2.0211, role: 'ADMIN', created_at: '2026-11-01T09:00:00Z' }
   ];
 
   let uIdx = 1;
@@ -610,7 +610,7 @@ function encodeMunicipalityMeta(muniName, lat, lng, comarca = '') {
 
 function decodeMunicipalityMeta(userObj) {
   if (!userObj) {
-    return { name: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, comarca: 'Lluçanès' };
+    return { name: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, comarca: 'Bages' };
   }
   if (userObj.email && typeof userObj.email === 'string' && userObj.email.startsWith('muni:')) {
     const parts = userObj.email.slice(5).split('|');
@@ -634,7 +634,7 @@ function decodeMunicipalityMeta(userObj) {
     if (cached) return { name: rawName, ...cached };
     return { name: rawName, lat: 41.9461, lng: 2.0211, comarca: '' };
   }
-  return { name: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, comarca: 'Lluçanès' };
+  return { name: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, comarca: 'Bages' };
 }
 
 function findPredefinedMunicipality(name) {
@@ -933,7 +933,7 @@ class PessebresDB {
         id: 'usr_admin',
         username: 'admin',
         municipality: 'Sant Feliu Sasserra',
-        comarca: 'Lluçanès',
+        comarca: 'Bages',
         lat: 41.9461,
         lng: 2.0211,
         role: 'ADMIN',

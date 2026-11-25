@@ -886,7 +886,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>
               <div class="origins-muni-cell">
                 <strong>📍 ${escapeHTML(item.name)}</strong>
-                ${item.comarca ? `<span class="origins-comarca-sub">${escapeHTML(item.comarca)}</span>` : ''}
                 <div class="origins-progress-track">
                   <div class="origins-progress-fill" style="width: ${Math.max(6, item.percentage)}%;"></div>
                 </div>
@@ -943,8 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const marker = L.marker([item.lat, item.lng], { icon });
         marker.bindPopup(`
           <div style="text-align:center; padding:4px 6px;">
-            <div style="font-weight:900; color:#7a1a12; font-size:0.98rem;">📍 ${escapeHTML(item.name)}</div>
-            ${item.comarca ? `<div style="font-size:0.75rem; color:#666; margin-bottom:6px;">${escapeHTML(item.comarca)}</div>` : ''}
+            <div style="font-weight:900; color:#7a1a12; font-size:0.98rem; margin-bottom:4px;">📍 ${escapeHTML(item.name)}</div>
             <div style="font-size:0.84rem; font-weight:700; color:#1b4332;">👥 <strong>${item.usersCount}</strong> ${item.usersCount === 1 ? 'participant' : 'participants'} (${item.percentage}%)</div>
             <div style="font-size:0.82rem; font-weight:700; color:#522415; margin-top:2px;">🎄 <strong>${item.visitsCount}</strong> pessebres visitats</div>
           </div>
@@ -1158,7 +1156,6 @@ document.addEventListener('DOMContentLoaded', () => {
       li.className = 'muni-suggestion-item';
       li.innerHTML = `
         <span class="muni-sug-name">📍 ${escapeHTML(m.name)}</span>
-        ${m.comarca ? `<span class="muni-sug-comarca">${escapeHTML(m.comarca)}</span>` : ''}
       `;
       li.addEventListener('mousedown', (e) => {
         e.preventDefault();
