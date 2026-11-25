@@ -2007,6 +2007,35 @@ document.addEventListener('DOMContentLoaded', () => {
     collapseIndexPanel();
   }
 
+  // BANNER INFORMATIU QUAN ESTEM AL MODE DEMO (/demo o ?demo=1)
+  if (window.IS_DEMO_MODE) {
+    const demoBanner = document.createElement('div');
+    demoBanner.className = 'demo-mode-floating-bar';
+    const realUrl = window.location.pathname.toLowerCase().includes('/demo')
+      ? '../index.html'
+      : window.location.pathname;
+    demoBanner.innerHTML = `
+      <span class="demo-badge-label">🧪 <strong>MODE DEMO</strong> · 50 Pessebres · 200 Participants</span>
+      <div class="demo-badge-actions">
+        <button type="button" class="btn-demo-reset" id="btn-demo-reset" title="Restaurar les dades inicials de la demo">🔄 Reiniciar</button>
+        <a href="${realUrl}" class="btn-demo-exit" title="Anar a la pàgina oficial en blanc">🌐 Web Real</a>
+      </div>
+    `;
+    document.body.appendChild(demoBanner);
+
+    const btnReset = document.getElementById('btn-demo-reset');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        window.db.resetDemoData();
+        renderApprovedMarkers();
+        renderUserProfile();
+        renderRankingTable();
+        updateTopStats();
+        showToast('🔄 Dades de la Demo (50 pessebres i 200 participants) restaurades!');
+      });
+    }
+  }
+
   // ENGEGAR EL MAPA I LES VISTES
   initMap();
   renderUserProfile();

@@ -2600,5 +2600,73 @@ body.map-mode-satellite .btn-floating-wikiloc .wikiloc-text {
   }
 }
 
+/* ==========================================================================
+   BARRA FLOTANT DEL MODE DEMO (/demo o ?demo=1)
+   ========================================================================== */
+.demo-mode-floating-bar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  background: rgba(20, 54, 40, 0.94);
+  color: #fdfbf7;
+  border: 1.5px solid #e5b869;
+  border-radius: 30px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.demo-badge-label strong {
+  color: #ffd700;
+  letter-spacing: 0.4px;
+}
+
+.demo-badge-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-demo-reset,
+.btn-demo-exit {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(229, 184, 105, 0.55);
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-demo-reset:hover,
+.btn-demo-exit:hover {
+  background: #e5b869;
+  color: #0b251a;
+}
+
+@media (max-width: 768px) {
+  .demo-mode-floating-bar {
+    bottom: 70px;
+    left: 12px;
+    transform: none;
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    gap: 8px;
+  }
+}
+
+
 
 

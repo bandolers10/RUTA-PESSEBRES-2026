@@ -1,39 +1,35 @@
 /**
  * Base de Dades per Ruta dels Pessebres 2026
- * Sistema de registre fàcil i privat per Nom + Població (0 contrasenyes d'usuari, 0 correus exposats)
- * + Mapa de Calor de Poblacions i Sincronització en temps real amb Supabase.
+ * - Mode Producció (per defecte): Pàgina en blanc (0 pessebres, 0 participants, 0 visites) sincronitzada amb Supabase.
+ * - Mode Demo (/demo, demo.html o ?demo=1): Simulació realista amb 50 pessebres i 200 participants d'arreu de Catalunya.
  */
 
-const DB_KEYS = {
-  USERS: 'pessebres_2026_users',
-  POINTS: 'pessebres_2026_nativity_points',
-  VISITS: 'pessebres_2026_visits',
-  CURRENT_USER: 'pessebres_2026_current_user',
-  GEOCACHE: 'pessebres_2026_muni_geocache'
-};
+const IS_DEMO_MODE = Boolean(
+  window.PESSEBRES_DEMO_MODE ||
+  window.location.pathname.toLowerCase().includes('/demo') ||
+  window.location.pathname.toLowerCase().endsWith('demo.html') ||
+  new URLSearchParams(window.location.search).has('demo') ||
+  window.location.hash.toLowerCase().includes('demo')
+);
 
-// 19 Pessebres oficials de Sant Feliu Sasserra
-const SEED_POINTS = [
-  { id: 'pt_1', name: 'EL DEL SENGLAR', municipality: 'Sant Feliu Sasserra', latitude: 41.9560, longitude: 2.0080, description: 'Pessebre a la solana de la muntanya.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-02T10:00:00Z' },
-  { id: 'pt_2', name: 'LES GUILLERIES', municipality: 'Sant Feliu Sasserra', latitude: 41.9580, longitude: 2.0120, description: 'Ubicat al camí de les Guilleries.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-02T12:30:00Z' },
-  { id: 'pt_3', name: 'BALMA DE LES PASTORELLES', municipality: 'Sant Feliu Sasserra', latitude: 41.9565, longitude: 2.0200, description: 'Dins la bauma natural de les pastorelles.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-03T09:00:00Z' },
-  { id: 'pt_4', name: 'BARRACA HORTA DE FONTARMONA', municipality: 'Sant Feliu Sasserra', latitude: 41.9500, longitude: 2.0170, description: 'Junt a la vinya i l\'horta antiga.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-03T14:00:00Z' },
-  { id: 'pt_5', name: 'SANTA MAGDALENA', municipality: 'Sant Feliu Sasserra', latitude: 41.9485, longitude: 2.0120, description: 'Pessebre rústic als peus del turó.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-04T08:30:00Z' },
-  { id: 'pt_6', name: 'ESGLÉSIA DE SANT FELIU SASSERRA', municipality: 'Sant Feliu Sasserra', latitude: 41.9455, longitude: 2.0210, description: 'Pessebre del nucli antic del poble.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-04T10:00:00Z' },
-  { id: 'pt_7', name: 'BAUMA DEL CÀNTIR', municipality: 'Sant Feliu Sasserra', latitude: 41.9460, longitude: 2.0175, description: 'Amagat a la bauma del càntir.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-04T15:00:00Z' },
-  { id: 'pt_8', name: 'FONT FORRIOLA', municipality: 'Sant Feliu Sasserra', latitude: 41.9440, longitude: 2.0150, description: 'Als peus del rajaire de la font.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T09:15:00Z' },
-  { id: 'pt_9', name: 'ROURE CENTENÀRI', municipality: 'Sant Feliu Sasserra', latitude: 41.9420, longitude: 2.0130, description: 'Sota l\'ombra del roure centenari.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T11:45:00Z' },
-  { id: 'pt_10', name: 'FONT DE LA CORDA', municipality: 'Sant Feliu Sasserra', latitude: 41.9405, longitude: 2.0195, description: 'Costat de la font de la corda.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T14:20:00Z' },
-  { id: 'pt_11', name: 'BAUMA SERRAT DEL MOLÍ DE BADIA', municipality: 'Sant Feliu Sasserra', latitude: 41.9390, longitude: 2.0240, description: 'Pessebre al molí de Badia.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T15:00:00Z' },
-  { id: 'pt_12', name: 'PUIGLLUSÀ', municipality: 'Sant Feliu Sasserra', latitude: 41.9520, longitude: 2.0250, description: 'Al cim de Puigllusà.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T15:30:00Z' },
-  { id: 'pt_13', name: 'BAUMA DE PAHONELLAS', municipality: 'Sant Feliu Sasserra', latitude: 41.9540, longitude: 2.0280, description: 'Pessebre tradicional en rocateres.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T16:00:00Z' },
-  { id: 'pt_14', name: 'SERRAT LLOBATER', municipality: 'Sant Feliu Sasserra', latitude: 41.9490, longitude: 2.0300, description: 'Pessebre a la cresta del serrat.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T16:30:00Z' },
-  { id: 'pt_15', name: 'FONT PERDUDA', municipality: 'Sant Feliu Sasserra', latitude: 41.9430, longitude: 2.0310, description: 'Prop de la font perduda.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T17:00:00Z' },
-  { id: 'pt_16', name: 'MOLÍ DE LA RIBA', municipality: 'Sant Feliu Sasserra', latitude: 41.9380, longitude: 2.0290, description: 'Al vell molí de la riba.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T17:30:00Z' },
-  { id: 'pt_17', name: 'XUP DE LES SALERES DELS ARNAUS', municipality: 'Sant Feliu Sasserra', latitude: 41.9350, longitude: 2.0220, description: 'Pessebre a la zona del xup.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T18:00:00Z' },
-  { id: 'pt_18', name: 'FARIGOLA', municipality: 'Sant Feliu Sasserra', latitude: 41.9340, longitude: 2.0180, description: 'Envoltat de farigola del bosc.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T18:30:00Z' },
-  { id: 'pt_19', name: 'L\'OLIVERA DE CAL PRIM / CAL BASTÓ', municipality: 'Sant Feliu Sasserra', latitude: 41.9320, longitude: 2.0140, description: 'Al peu de l\'olivera centenària.', submitted_by: 'Organització', status: 'APPROVED', created_at: '2026-01-05T19:00:00Z' }
-];
+window.IS_DEMO_MODE = IS_DEMO_MODE;
+
+const DB_KEYS = IS_DEMO_MODE
+  ? {
+      USERS: 'pessebres_2026_demo_users_v1',
+      POINTS: 'pessebres_2026_demo_points_v1',
+      VISITS: 'pessebres_2026_demo_visits_v1',
+      CURRENT_USER: 'pessebres_2026_demo_current_user_v1',
+      GEOCACHE: 'pessebres_2026_muni_geocache'
+    }
+  : {
+      USERS: 'pessebres_2026_users',
+      POINTS: 'pessebres_2026_nativity_points',
+      VISITS: 'pessebres_2026_visits',
+      CURRENT_USER: 'pessebres_2026_current_user',
+      GEOCACHE: 'pessebres_2026_muni_geocache',
+      PROD_CLEAN_FLAG: 'pessebres_2026_prod_blank_v2'
+    };
 
 // Verificació d'Admin amb Hash SHA-256 irreversible (cap contrasenya en text pla al GitHub)
 const ADMIN_AUTH = {
@@ -150,7 +146,7 @@ const CATALONIA_MUNICIPALITIES = [
   { name: 'Santpedor', comarca: 'Bages', lat: 41.7836, lng: 1.8414 },
   { name: 'Sant Fruitós de Bages', comarca: 'Bages', lat: 41.7506, lng: 1.8725 },
   { name: 'Sant Joan de Vilatorrada', comarca: 'Bages', lat: 41.7453, lng: 1.8047 },
-  { name: 'Santona / Sant Mateu de Bages', comarca: 'Bages', lat: 41.7969, lng: 1.7328 },
+  { name: 'Sant Mateu de Bages', comarca: 'Bages', lat: 41.7969, lng: 1.7328 },
   { name: 'Súria', comarca: 'Bages', lat: 41.8317, lng: 1.7525 },
   { name: 'Cardona', comarca: 'Bages', lat: 41.9139, lng: 1.6806 },
   { name: 'Callús', comarca: 'Bages', lat: 41.7844, lng: 1.7850 },
@@ -231,7 +227,7 @@ const CATALONIA_MUNICIPALITIES = [
   { name: 'Montmajor', comarca: 'Berguedà', lat: 42.0169, lng: 1.7358 },
   { name: 'L\'Espunyola', comarca: 'Berguedà', lat: 42.0542, lng: 1.7711 },
 
-  // Solsonès i Ripollès i Cerdanya
+  // Solsonès, Ripollès, Cerdanya
   { name: 'Solsona', comarca: 'Solsonès', lat: 41.9944, lng: 1.5178 },
   { name: 'Sant Llorenç de Morunys', comarca: 'Solsonès', lat: 42.1372, lng: 1.5906 },
   { name: 'Ripoll', comarca: 'Ripollès', lat: 42.2006, lng: 2.1903 },
@@ -359,6 +355,243 @@ const CATALONIA_MUNICIPALITIES = [
   { name: 'La Ràpita', comarca: 'Montsià', lat: 40.6194, lng: 0.5928 }
 ];
 
+// ============================================================================
+// GENERADOR DETERMINISTA PER AL MODE DEMO (50 PESSEBRES + 200 PARTICIPANTS)
+// ============================================================================
+function buildDemoDataset() {
+  // 1. Distribució realista de 200 participants exactes entre 42 poblacions de Catalunya
+  const townDistribution = [
+    ['Sant Feliu Sasserra', 33],
+    ['Prats de Lluçanès', 16],
+    ['Manresa', 14],
+    ['Vic', 11],
+    ['Olost', 10],
+    ['Oristà', 8],
+    ['Avinyó', 7],
+    ['Barcelona', 7],
+    ['Artés', 6],
+    ['Santa Maria d\'Oló', 6],
+    ['Perafita', 5],
+    ['Lluçà', 5],
+    ['Sallent', 5],
+    ['Moià', 5],
+    ['Berga', 5],
+    ['Santpedor', 4],
+    ['Navàs', 4],
+    ['Sant Boi de Lluçanès', 4],
+    ['Sabadell', 4],
+    ['Tona', 3],
+    ['Manlleu', 3],
+    ['Gironella', 3],
+    ['Puig-reig', 3],
+    ['Terrassa', 3],
+    ['Balsareny', 2],
+    ['Sant Fruitós de Bages', 2],
+    ['Alpens', 2],
+    ['Sant Martí d\'Albars', 2],
+    ['Torelló', 2],
+    ['Granollers', 2],
+    ['Sant Cugat del Vallès', 2],
+    ['Solsona', 2],
+    ['Súria', 1],
+    ['Cardona', 1],
+    ['Centelles', 1],
+    ['Taradell', 1],
+    ['Ripoll', 1],
+    ['Olot', 1],
+    ['Girona', 1],
+    ['Mataró', 1],
+    ['Igualada', 1],
+    ['Reus', 1]
+  ]; // Suma exacta = 200 participants
+
+  const firstNames = [
+    'Jordi', 'Marta', 'Marc', 'Laia', 'Pau', 'Anna', 'Joan', 'Núria', 'Arnau', 'Carla',
+    'Pol', 'Mireia', 'Oriol', 'Gemma', 'Roger', 'Montse', 'Aleix', 'Clàudia', 'Guillem', 'Júlia',
+    'Albert', 'Laura', 'Xavier', 'Sílvia', 'Enric', 'Berta', 'Martí', 'Aina', 'Eloi', 'Judit',
+    'Nil', 'Mariona', 'Bernat', 'Helena', 'Lluís', 'Rosa', 'Ferran', 'Ester', ' Sergi', 'Alba',
+    'Família', 'Colla', 'Grup', 'Ton', 'Quim', 'Neus', 'Carles', 'Txell', 'Biel', 'Ona'
+  ];
+  const lastNames = [
+    'Puig', 'Soler', 'Serra', 'Vila', 'Rovira', 'Font', 'Roca', 'Prat', 'Casals', 'Ferrer',
+    'Sala', 'Mas', 'Pujol', 'Valls', 'bosch', 'plana', 'Comas', 'Roig', 'Mora', 'Pons',
+    'torras', 'Riera', 'Garriga', 'codina', 'Llobet', 'Bagué', 'Fajula', 'Costa', 'Grau', 'camps'
+  ];
+
+  // PRNG determinista
+  let seed = 20261225;
+  function rand() {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  }
+
+  const users = [
+    { id: 'usr_admin', username: 'admin', municipality: 'Sant Feliu Sasserra', comarca: 'Lluçanès', lat: 41.9461, lng: 2.0211, role: 'ADMIN', created_at: '2026-11-01T09:00:00Z' }
+  ];
+
+  let uIdx = 1;
+  for (const [muniName, count] of townDistribution) {
+    const muniMeta = findPredefinedMunicipality(muniName) || { name: muniName, comarca: 'Catalunya', lat: 41.9461, lng: 2.0211 };
+    for (let c = 0; c < count; c++) {
+      const fn = firstNames[(uIdx * 7 + c * 3) % firstNames.length].trim();
+      const lnRaw = lastNames[(uIdx * 11 + c * 5) % lastNames.length].trim();
+      const ln = lnRaw.charAt(0).toUpperCase() + lnRaw.slice(1);
+      const username = (fn === 'Família' || fn === 'Colla' || fn === 'Grup')
+        ? `${fn} ${ln} #${uIdx}`
+        : `${fn} ${ln} ${uIdx > 120 ? '(' + muniName.split(' ')[0] + ')' : ''}`.trim();
+
+      users.push({
+        id: `demo_usr_${uIdx}`,
+        username,
+        municipality: muniMeta.name,
+        comarca: muniMeta.comarca || '',
+        lat: muniMeta.lat,
+        lng: muniMeta.lng,
+        role: 'USER',
+        created_at: new Date(Date.UTC(2026, 10, 1 + (uIdx % 24), 8 + (uIdx % 12), (uIdx * 7) % 60)).toISOString()
+      });
+      uIdx++;
+    }
+  }
+
+  // 2. 50 Pessebres inventats i realistes pel terme de Sant Feliu Sasserra
+  const demoPessebreSpecs = [
+    ['EL DEL SENGLAR', 41.9560, 2.0080, 'Pessebre a la solana de la muntanya entre alzines.'],
+    ['LES GUILLERIES', 41.9580, 2.0120, 'Ubicat al camí vell de les Guilleries.'],
+    ['BALMA DE LES PASTORELLES', 41.9565, 2.0200, 'Dins la bauma natural de les pastorelles.'],
+    ['BARRACA HORTA DE FONTARMONA', 41.9500, 2.0170, 'Al costat de la barraca de vinya i l\'horta antiga.'],
+    ['SANTA MAGDALENA', 41.9485, 2.0120, 'Pessebre rústic als peus de l\'ermita de Santa Magdalena.'],
+    ['ESGLÉSIA DE SANT FELIU SASSERRA', 41.9455, 2.0210, 'Pessebre tradicional al porxo del nucli antic.'],
+    ['BAUMA DEL CÀNTIR', 41.9460, 2.0175, 'Amagat a la fresca de la bauma del càntir.'],
+    ['FONT FORRIOLA', 41.9440, 2.0150, 'Als peus del brollador de la Font Forriola.'],
+    ['ROURE CENTENARI', 41.9420, 2.0130, 'Sota les branques del gran roure centenari.'],
+    ['FONT DE LA CORDA', 41.9405, 2.0195, 'A tocar de la Font de la Corda, camí ombrívol.'],
+    ['BAUMA SERRAT DEL MOLÍ DE BADIA', 41.9390, 2.0240, 'En un racó de roca prop del Molí de Badia.'],
+    ['PUIGLLUSÀ', 41.9520, 2.0250, 'Al punt panoràmic del cim de Puigllusà.'],
+    ['BAUMA DE PAHONELLAS', 41.9540, 2.0280, 'Pessebre tradicional encastat a les rocateres.'],
+    ['SERRAT LLOBATER', 41.9490, 2.0300, 'A la cresta ventosa del Serrat Llobater amb grans vistes.'],
+    ['FONT PERDUDA', 41.9430, 2.0310, 'Entre molsa i falgueres a la Font Perduda.'],
+    ['MOLÍ DE LA RIBA', 41.9380, 2.0290, 'Junt a la resclosa del vell Molí de la Riba.'],
+    ['XUP DE LES SALERES DELS ARNAUS', 41.9350, 2.0220, 'Pessebre de bosc a la zona de les Saleres.'],
+    ['FARIGOLA', 41.9340, 2.0180, 'Envoltat de farigola i romaní al replà del bosc.'],
+    ['L\'OLIVERA DE CAL PRIM / CAL BASTÓ', 41.9320, 2.0140, 'Al peu del tronc de l\'olivera centenària.'],
+    ['CINGLE DE LES BRUIXES', 41.9595, 2.0155, 'Al mirador natural del cingle amb figures de fusta.'],
+    ['FONT DEL TEIXÓ', 41.9572, 2.0242, 'Raconada humida amb pessebre de suro i molsa.'],
+    ['BARRACA DE PEDRA SECA DEL PLA', 41.9535, 2.0105, 'Dins una barraca de vinya restaurada.'],
+    ['TURÓ DEL VENT', 41.9608, 2.0218, 'Pessebre minimalista de ferro forjat al cim del turó.'],
+    ['TORRENT DE LA SALA', 41.9472, 2.0075, 'Passant la passera de fusta del torrent.'],
+    ['ROUREDA DE CAL VILÀ', 41.9412, 2.0088, 'Dins la soca buida d\'un roure vell.'],
+    ['COVA D\'EN ROCAGUINARDA', 41.9552, 2.0322, 'Inspirat en els bandolers del Lluçanès.'],
+    ['MIRADOR DEL LLUÇANÈS', 41.9510, 2.0345, 'Vistes cap al Pedraforca i el Puigmal.'],
+    ['ERA DE CAL PERRIS', 41.9448, 2.0252, 'Al paller antic amb figures de fang artesanes.'],
+    ['BOSC DE LES TRES FONTS', 41.9372, 2.0158, 'Entre tres surgències d\'aigua natural.'],
+    ['CAMÍ RAL DELS BANDOLERS', 41.9398, 2.0112, 'A la cruïlla de l\'antic camí ral.'],
+    ['BAUMA DE L\'ESQUIROL', 41.9588, 2.0278, 'Pessebre fet amb pinyes i aglans del bosc.'],
+    ['PLA DE LES GARRICADES', 41.9522, 2.0142, 'Al mig dels camps de conreu i garrics.'],
+    ['FONT DE L\'OM', 41.9478, 2.0228, 'A l\'ombra dels oms prop del poble.'],
+    ['SERRAT DE LA CREU', 41.9465, 2.0282, 'Sota la creu de terme del serrat.'],
+    ['RACÓ DE LA MOLSA', 41.9422, 2.0272, 'Bosc obac ple de molsa natural.'],
+    ['PAS DEL LLOP', 41.9362, 2.0265, 'Estret de roca al camí de baixada.'],
+    ['BARRACA D\'EN PEROT', 41.9332, 2.0212, 'Cabana de pastors amb pessebre il·luminat.'],
+    ['FONT DELS OCELLS', 41.9355, 2.0125, 'Amb menjadores d\'ocells i figures pintades a mà.'],
+    ['COLLET DE SANT PERE', 41.9498, 2.0055, 'A la carena de ponent del terme.'],
+    ['BAUMA DE LA GUINEU', 41.9545, 2.0062, 'Sota una gran llosa de pedra inclinada.'],
+    ['PINEDA DE CAN SOLER', 41.9612, 2.0102, 'Al cor de la pineda de pi roig.'],
+    ['TORRENT DELSBOIXOS', 41.9578, 2.0182, 'Camí vorejat de boixos centenaris.'],
+    ['POU DE GLAÇ ANTIC', 41.9435, 2.0235, 'Junt a l\'estructura de pedra de l\'antic pou de glaç.'],
+    ['MIRADOR DE MONTSERRAT', 41.9315, 2.0175, 'Punt des d\'on s\'albira la serra de Montserrat.'],
+    ['PLAÇA DE L\'AJUNTAMENT VELL', 41.9458, 2.0218, 'Al centre històric de Sant Feliu Sasserra.'],
+    ['CAMÍ DE SANTA EULÀLIA', 41.9618, 2.0258, 'En direcció nord cap a la vall de Lluçà.'],
+    ['BAUMA DELS PASTORS', 41.9508, 2.0288, 'Antic refugi de ramats a la cinglera.'],
+    ['FONT DEL BOIX', 41.9385, 2.0205, 'Aigua fresca i pessebre de ceràmica.'],
+    ['SERRAT DELS CORBS', 41.9408, 2.0332, 'Carena rocallosa a llevant del municipi.'],
+    ['ERMITA VELLA DEL REMEI', 41.9338, 2.0285, 'Últim pessebre de la ruta circular sud.']
+  ];
+
+  const participantUsers = users.filter(u => u.role !== 'ADMIN');
+  const points = demoPessebreSpecs.map(([name, lat, lng, desc], idx) => {
+    const proposer = idx < 19
+      ? 'Organització'
+      : participantUsers[(idx * 5) % participantUsers.length].username;
+    return {
+      id: `pt_${idx + 1}`,
+      name,
+      municipality: 'Sant Feliu Sasserra',
+      latitude: lat,
+      longitude: lng,
+      description: desc,
+      submitted_by: proposer,
+      status: 'APPROVED',
+      created_at: new Date(Date.UTC(2026, 10, 2 + (idx % 15), 9, idx)).toISOString()
+    };
+  });
+
+  // Afegim 2 propostes pendents perquè es pugui provar el panell d'Admin a la Demo
+  points.push(
+    {
+      id: 'pt_51',
+      name: 'BAUMA SECRETA DEL GORGS (PROVA DEMO)',
+      municipality: 'Sant Feliu Sasserra',
+      latitude: 41.9475,
+      longitude: 2.0190,
+      description: 'Proposta pendent de mostra per provar el panell d\'administrador.',
+      submitted_by: participantUsers[0].username,
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'pt_52',
+      name: 'PESSEBRE DEL CIM DE LA GUARDIOLA (PROVA DEMO)',
+      municipality: 'Sant Feliu Sasserra',
+      latitude: 41.9530,
+      longitude: 2.0220,
+      description: 'Segona proposta pendent per acceptar o rebutjar des d\'Admin.',
+      submitted_by: participantUsers[3].username,
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    }
+  );
+
+  // 3. Visites i valoracions amb Boles de Nadal (1 a 5) per als 200 participants
+  const visits = [];
+  let vId = 1;
+  participantUsers.forEach((u, idx) => {
+    // Alguns participants molt actius (35-50 pessebres), altres mitjans (12-34), altres casuals (2-11)
+    let targetVisits;
+    if (idx < 12) {
+      targetVisits = 50 - (idx % 4); // Top pessebristes (47 a 50 pessebres)
+    } else if (idx < 60) {
+      targetVisits = 20 + Math.floor(rand() * 25);
+    } else if (idx < 140) {
+      targetVisits = 8 + Math.floor(rand() * 15);
+    } else {
+      targetVisits = 1 + Math.floor(rand() * 8);
+    }
+
+    const step = (idx % 7) + 1;
+    let startPt = idx % 50;
+    const visitedSet = new Set();
+
+    for (let k = 0; k < targetVisits; k++) {
+      const ptIdx = (startPt + k * step) % 50;
+      if (visitedSet.has(ptIdx)) continue;
+      visitedSet.add(ptIdx);
+
+      const hasRating = rand() > 0.22;
+      const rating = hasRating ? (3 + Math.floor(rand() * 3)) : null; // 3, 4 o 5 boles de Nadal
+      visits.push({
+        id: `demo_v_${vId++}`,
+        user_id: u.id,
+        nativity_point_id: `pt_${ptIdx + 1}`,
+        rating,
+        created_at: new Date(Date.UTC(2026, 10, 10 + (vId % 15), 10, vId % 60)).toISOString()
+      });
+    }
+  });
+
+  return { users, points, visits };
+}
+
 function normalizeText(str) {
   return (str || '')
     .toString()
@@ -368,7 +601,6 @@ function normalizeText(str) {
     .trim();
 }
 
-// Codificar població i coordenades dins el camp 'email' de Supabase per a compatibilitat 100% amb la taula actual
 function encodeMunicipalityMeta(muniName, lat, lng, comarca = '') {
   const cleanName = (muniName || 'Sant Feliu Sasserra').trim();
   const cLat = Number(lat) || 41.9461;
@@ -380,7 +612,6 @@ function decodeMunicipalityMeta(userObj) {
   if (!userObj) {
     return { name: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, comarca: 'Lluçanès' };
   }
-  // 1. Si ve codificat a email amb prefix 'muni:'
   if (userObj.email && typeof userObj.email === 'string' && userObj.email.startsWith('muni:')) {
     const parts = userObj.email.slice(5).split('|');
     const name = (parts[0] || 'Sant Feliu Sasserra').trim();
@@ -392,7 +623,6 @@ function decodeMunicipalityMeta(userObj) {
       return { name, lat, lng, comarca };
     }
   }
-  // 2. Si té propietat municipality
   const rawName = (userObj.municipality || '').trim();
   if (rawName) {
     const found = findPredefinedMunicipality(rawName);
@@ -404,7 +634,6 @@ function decodeMunicipalityMeta(userObj) {
     if (cached) return { name: rawName, ...cached };
     return { name: rawName, lat: 41.9461, lng: 2.0211, comarca: '' };
   }
-  // 3. Per defecte (usuaris antics registrats abans d'afegir població)
   return { name: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, comarca: 'Lluçanès' };
 }
 
@@ -438,6 +667,7 @@ class PessebresDB {
   constructor() {
     this.supabase = null;
     this.isCloudEnabled = false;
+    this.isDemo = IS_DEMO_MODE;
     this.init();
   }
 
@@ -449,7 +679,6 @@ class PessebresDB {
   searchMunicipalities(query, limit = 8) {
     const q = normalizeText(query);
     if (!q) {
-      // Si està buit, suggerim primer els pobles del Lluçanès i voltants
       return CATALONIA_MUNICIPALITIES.slice(0, limit);
     }
     const startsWith = [];
@@ -472,19 +701,16 @@ class PessebresDB {
       return CATALONIA_MUNICIPALITIES[0];
     }
 
-    // 1. Cercar al catàleg de municipis de Catalunya
     const exactOrPrefix = findPredefinedMunicipality(trimmed);
     if (exactOrPrefix && normalizeText(exactOrPrefix.name) === normalizeText(trimmed)) {
       return exactOrPrefix;
     }
 
-    // 2. Cercar a la memòria cau local
     const cached = getGeocodedCache()[normalizeText(trimmed)];
     if (cached) {
       return { name: trimmed, ...cached };
     }
 
-    // 3. Si és un altre poble escrit lliurement, intentar geolocalitzar-lo amb OpenStreetMap Nominatim
     try {
       const ctrl = new AbortController();
       const tid = setTimeout(() => ctrl.abort(), 3500);
@@ -505,7 +731,6 @@ class PessebresDB {
       }
     } catch (e) {}
 
-    // 4. Fallback si hi ha una coincidència parcial al catàleg o coordenades per defecte
     if (exactOrPrefix) return exactOrPrefix;
     return { name: trimmed, lat: 41.9461, lng: 2.0211, comarca: '' };
   }
@@ -513,7 +738,8 @@ class PessebresDB {
   // --- MAPA DE PUNTS ELIMINATS DEFINITIVAMENT ---
   getDeletedPointIds() {
     try {
-      return new Set(JSON.parse(localStorage.getItem('pessebres_deleted_point_ids') || '[]'));
+      const key = this.isDemo ? 'pessebres_demo_deleted_point_ids' : 'pessebres_deleted_point_ids';
+      return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
     } catch (e) {
       return new Set();
     }
@@ -521,55 +747,71 @@ class PessebresDB {
 
   addDeletedPointId(id) {
     try {
+      const key = this.isDemo ? 'pessebres_demo_deleted_point_ids' : 'pessebres_deleted_point_ids';
       const deleted = this.getDeletedPointIds();
       deleted.add(id);
-      localStorage.setItem('pessebres_deleted_point_ids', JSON.stringify([...deleted]));
+      localStorage.setItem(key, JSON.stringify([...deleted]));
     } catch (e) {
       console.warn("Error guardant deleted point id:", e);
     }
   }
 
+  resetDemoData() {
+    if (!this.isDemo) return;
+    localStorage.removeItem('pessebres_demo_deleted_point_ids');
+    const demoData = buildDemoDataset();
+    localStorage.setItem(DB_KEYS.USERS, JSON.stringify(demoData.users));
+    localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(demoData.points));
+    localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(demoData.visits));
+    localStorage.removeItem(DB_KEYS.CURRENT_USER);
+    window.dispatchEvent(new CustomEvent('db:changed'));
+  }
+
   init() {
-    // Netejar qualsevol antic mapa de contrasenyes del navegador per privacitat
     localStorage.removeItem('pessebres_user_passwords');
 
-    // 1. Assegurar dades inicials a localStorage si no n'hi ha cap
-    const currentPoints = localStorage.getItem(DB_KEYS.POINTS);
-    const deletedIds = this.getDeletedPointIds();
-
-    if (!currentPoints) {
-      const initialPts = SEED_POINTS.filter(sp => !deletedIds.has(sp.id));
-      localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(initialPts));
-    } else {
-      let pts = JSON.parse(currentPoints);
-      pts = pts.filter(p => !deletedIds.has(p.id) && !p.id.startsWith('prova_') && !(parseInt(p.id.replace('pt_', ''), 10) >= 20 && (p.submitted_by === 'Organització' || p.submitted_by === 'Prova')));
-      localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(pts));
+    // MODE DEMO: 50 pessebres inventats i 200 participants d'arreu de Catalunya (aïllat de Supabase)
+    if (this.isDemo) {
+      if (!localStorage.getItem(DB_KEYS.POINTS) || !localStorage.getItem(DB_KEYS.USERS) || !localStorage.getItem(DB_KEYS.VISITS)) {
+        const demoData = buildDemoDataset();
+        localStorage.setItem(DB_KEYS.USERS, JSON.stringify(demoData.users));
+        localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(demoData.points));
+        localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(demoData.visits));
+      }
+      console.log("🧪 MODE DEMO ACTIU: 50 pessebres i 200 participants carregats!");
+      return;
     }
 
-    // Inicialitzar usuaris si no n'hi ha cap (sense contrasenyes en text pla!)
-    const storedUsers = localStorage.getItem(DB_KEYS.USERS);
-    if (!storedUsers) {
+    // MODE PRODUCCIÓ: Deixar la pàgina 100% EN BLANC (0 pessebres, 0 participants, 0 visites) per publicar
+    if (!localStorage.getItem(DB_KEYS.PROD_CLEAN_FLAG)) {
+      localStorage.setItem(DB_KEYS.POINTS, JSON.stringify([]));
       localStorage.setItem(DB_KEYS.USERS, JSON.stringify([
         { id: 'usr_admin', username: 'admin', municipality: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, role: 'ADMIN', created_at: new Date().toISOString() }
       ]));
-    } else {
-      try {
-        const cleanUsers = JSON.parse(storedUsers).map(u => this.sanitizeUserObject(u));
-        localStorage.setItem(DB_KEYS.USERS, JSON.stringify(cleanUsers));
-      } catch (e) {}
+      localStorage.setItem(DB_KEYS.VISITS, JSON.stringify([]));
+      localStorage.removeItem(DB_KEYS.CURRENT_USER);
+      localStorage.removeItem('pessebres_deleted_point_ids');
+      localStorage.setItem(DB_KEYS.PROD_CLEAN_FLAG, 'true');
     }
 
+    if (!localStorage.getItem(DB_KEYS.POINTS)) {
+      localStorage.setItem(DB_KEYS.POINTS, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(DB_KEYS.USERS)) {
+      localStorage.setItem(DB_KEYS.USERS, JSON.stringify([
+        { id: 'usr_admin', username: 'admin', municipality: 'Sant Feliu Sasserra', lat: 41.9461, lng: 2.0211, role: 'ADMIN', created_at: new Date().toISOString() }
+      ]));
+    }
     if (!localStorage.getItem(DB_KEYS.VISITS)) {
       localStorage.setItem(DB_KEYS.VISITS, JSON.stringify([]));
     }
 
-    // Sanejar també l'usuari actual si ja té sessió iniciada
     const cur = this.getCurrentUser();
     if (cur) {
       localStorage.setItem(DB_KEYS.CURRENT_USER, JSON.stringify(this.sanitizeUserObject(cur)));
     }
 
-    // 2. Connectar a Supabase si s'ha configurat
+    // Connectar a Supabase en mode Producció
     const cfg = window.SUPABASE_CONFIG;
     if (cfg && cfg.url && cfg.anonKey && cfg.url.startsWith('http') && window.supabase) {
       try {
@@ -600,7 +842,7 @@ class PessebresDB {
 
   // --- SINCRONITZACIÓ AMB SUPABASE ---
   async syncFromCloud() {
-    if (!this.isCloudEnabled || !this.supabase) return;
+    if (this.isDemo || !this.isCloudEnabled || !this.supabase) return;
     try {
       const [resUsers, resPoints, resVisits] = await Promise.all([
         this.supabase.from('users').select('id, username, email, role, created_at'),
@@ -609,11 +851,9 @@ class PessebresDB {
       ]);
 
       if (!resUsers.error && resUsers.data) {
-        // Guardem només dades públiques (Nom, Població, Coordenades del municipi), MAI contrasenyes ni correus
         const sanitizedUsers = resUsers.data.map(u => this.sanitizeUserObject(u));
         localStorage.setItem(DB_KEYS.USERS, JSON.stringify(sanitizedUsers));
 
-        // Actualitzar l'usuari actual si està loguejat
         const current = this.getCurrentUser();
         if (current && current.role !== 'ADMIN') {
           const matchCloud = sanitizedUsers.find(u => u.id === current.id);
@@ -624,11 +864,7 @@ class PessebresDB {
       }
       if (!resPoints.error && resPoints.data) {
         const deletedIds = this.getDeletedPointIds();
-        const cleanCloud = resPoints.data.filter(p =>
-          !deletedIds.has(p.id) &&
-          !p.id.startsWith('prova_') &&
-          !(parseInt(p.id.replace('pt_', ''), 10) >= 20 && (p.submitted_by === 'Organització' || p.submitted_by === 'Prova'))
-        );
+        const cleanCloud = resPoints.data.filter(p => !deletedIds.has(p.id));
         localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(cleanCloud));
       }
       if (!resVisits.error && resVisits.data) {
@@ -642,7 +878,7 @@ class PessebresDB {
   }
 
   subscribeRealtime() {
-    if (!this.isCloudEnabled || !this.supabase) return;
+    if (this.isDemo || !this.isCloudEnabled || !this.supabase) return;
     try {
       this.supabase.channel('public:realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'nativity_points' }, () => {
@@ -679,14 +915,11 @@ class PessebresDB {
     window.dispatchEvent(new CustomEvent('db:changed'));
   }
 
-  /**
-   * Entrada directa per Nom + Població (o accés d'Administrador encriptat amb SHA-256)
-   */
   async enterWithMunicipality(username, municipalityName, adminPassword = '') {
     const userTerm = (username || '').trim();
     if (!userTerm) throw new Error("Escriu el teu nom o àlies per participar.");
 
-    // 1. Verificació d'Administrador per Hash SHA-256 (cap contrasenya en text pla al codi)
+    // 1. Verificació d'Administrador per Hash SHA-256
     if (userTerm.toLowerCase() === ADMIN_AUTH.username) {
       const passTerm = (adminPassword || '').trim();
       if (!passTerm) {
@@ -723,7 +956,6 @@ class PessebresDB {
     const normUser = normalizeText(userTerm);
     const normMuni = normalizeText(resolvedMuni.name);
 
-    // 3. Comprovar si ja existeix aquest participant (mateix nom i mateixa població, o mateix nom)
     let existing = users.find(
       u => u.role !== 'ADMIN' && normalizeText(u.username) === normUser && normalizeText(u.municipality) === normMuni
     );
@@ -731,7 +963,6 @@ class PessebresDB {
     if (!existing) {
       const sameNameUser = users.find(u => u.role !== 'ADMIN' && normalizeText(u.username) === normUser);
       if (sameNameUser) {
-        // Si l'usuari ja existia d'abans, actualitzem la seva població i li recuperem la sessió!
         existing = sameNameUser;
       }
     }
@@ -747,14 +978,13 @@ class PessebresDB {
       localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
       this.setCurrentUser(existing);
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         this.supabase.from('users').update({ email: encodedMeta }).eq('id', existing.id).then();
       }
 
       return { user: existing, isNew: false, isAdmin: false };
     }
 
-    // 4. Crear nou participant (sense contrasenya ni correu personal!)
     const newUser = {
       id: 'usr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
       username: userTerm,
@@ -770,7 +1000,7 @@ class PessebresDB {
     localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
     this.setCurrentUser(newUser);
 
-    if (this.isCloudEnabled && this.supabase) {
+    if (!this.isDemo && this.isCloudEnabled && this.supabase) {
       try {
         const cloudRow = {
           id: newUser.id,
@@ -804,7 +1034,7 @@ class PessebresDB {
     visits = visits.filter(v => v.user_id !== userId);
     localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(visits));
 
-    if (this.isCloudEnabled && this.supabase) {
+    if (!this.isDemo && this.isCloudEnabled && this.supabase) {
       try {
         await this.supabase.from('visits').delete().eq('user_id', userId);
         await this.supabase.from('users').delete().eq('id', userId);
@@ -863,7 +1093,7 @@ class PessebresDB {
     points.push(newPoint);
     localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(points));
 
-    if (this.isCloudEnabled && this.supabase) {
+    if (!this.isDemo && this.isCloudEnabled && this.supabase) {
       await this.supabase.from('nativity_points').insert([newPoint]);
     }
 
@@ -878,7 +1108,7 @@ class PessebresDB {
       points[index].status = newStatus;
       localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(points));
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         await this.supabase.from('nativity_points').update({ status: newStatus }).eq('id', id);
       }
 
@@ -903,7 +1133,7 @@ class PessebresDB {
       };
       localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(points));
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         await this.supabase.from('nativity_points').update({
           name: points[index].name,
           municipality: points[index].municipality,
@@ -929,7 +1159,7 @@ class PessebresDB {
     const visits = this.getVisits().filter(v => v.nativity_point_id !== id);
     localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(visits));
 
-    if (this.isCloudEnabled && this.supabase) {
+    if (!this.isDemo && this.isCloudEnabled && this.supabase) {
       try {
         await this.supabase.from('visits').delete().eq('nativity_point_id', id);
         await this.supabase.from('nativity_points').delete().eq('id', id);
@@ -997,7 +1227,7 @@ class PessebresDB {
       visits[existingIndex].rating = r;
       localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(visits));
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         try {
           await this.supabase.from('visits').update({ rating: r }).eq('user_id', userId).eq('nativity_point_id', pointId);
         } catch (err) {
@@ -1015,7 +1245,7 @@ class PessebresDB {
       visits.push(newVisit);
       localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(visits));
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         try {
           const { error } = await this.supabase.from('visits').insert([newVisit]);
           if (error && error.message && error.message.includes('rating')) {
@@ -1043,7 +1273,7 @@ class PessebresDB {
       visits.splice(existingIndex, 1);
       localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(visits));
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         await this.supabase.from('visits').delete().eq('user_id', userId).eq('nativity_point_id', pointId);
       }
 
@@ -1059,7 +1289,7 @@ class PessebresDB {
       visits.push(newVisit);
       localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(visits));
 
-      if (this.isCloudEnabled && this.supabase) {
+      if (!this.isDemo && this.isCloudEnabled && this.supabase) {
         await this.supabase.from('visits').insert([newVisit]);
       }
 
