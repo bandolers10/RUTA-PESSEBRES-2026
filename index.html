@@ -178,8 +178,8 @@
       </div>
       <div class="modal-body">
         <div class="admin-tab-nav" style="margin-bottom: 12px; flex-wrap: wrap;">
-          <button type="button" class="admin-tab-btn active" id="ranking-tab-visited">🏆 Més Visitats</button>
-          <button type="button" class="admin-tab-btn" id="ranking-tab-created">🎄 Més Creats</button>
+          <button type="button" class="admin-tab-btn active" id="ranking-tab-visited">🏆 Rànquing Visites</button>
+          <button type="button" class="admin-tab-btn" id="ranking-tab-completed">🏅 Ruta Completada</button>
           <button type="button" class="admin-tab-btn" id="ranking-tab-origins">🔥 D'on Venim</button>
         </div>
 
@@ -289,20 +289,12 @@
               <input type="text" id="auth-username" class="auth-input" placeholder="Ex: Joan, Família Serra..." required>
             </div>
 
-            <!-- CAMP POBLACIÓ AMB AUTOCOMPLETAT DE CATALUNYA + BOTONS RÀPIDS -->
+            <!-- CAMP POBLACIÓ AMB AUTOCOMPLETAT DE CATALUNYA -->
             <div class="auth-input-group auth-muni-group" id="auth-muni-group">
               <label class="auth-input-label" for="auth-municipality">📍 De quina població vens?</label>
               <div class="muni-autocomplete-wrap">
-                <input type="text" id="auth-municipality" class="auth-input" placeholder="Escriu o tria el teu poble..." autocomplete="off">
+                <input type="text" id="auth-municipality" class="auth-input" placeholder="Escriu el teu poble o ciutat..." autocomplete="off">
                 <ul class="muni-suggestions-list" id="auth-muni-suggestions" style="display: none;"></ul>
-              </div>
-              <div class="muni-quick-chips">
-                <button type="button" class="muni-quick-chip" data-muni="Sant Feliu Sasserra">Sant Feliu Sasserra</button>
-                <button type="button" class="muni-quick-chip" data-muni="Prats de Lluçanès">Prats de Lluçanès</button>
-                <button type="button" class="muni-quick-chip" data-muni="Olost">Olost</button>
-                <button type="button" class="muni-quick-chip" data-muni="Oristà">Oristà</button>
-                <button type="button" class="muni-quick-chip" data-muni="Manresa">Manresa</button>
-                <button type="button" class="muni-quick-chip" data-muni="Vic">Vic</button>
               </div>
             </div>
 
@@ -314,10 +306,6 @@
 
             <button type="submit" class="auth-btn-primary" id="auth-submit-btn">🎄 ENTRAR A LA RUTA</button>
           </form>
-
-          <div class="auth-help-note" id="auth-help-note">
-            🔒 <strong>Fàcil i Privat:</strong> Sense correu ni contrasenya. La sessió queda guardada al teu mòbil perquè no hagis de tornar a entrar cada cop.
-          </div>
 
           <div class="auth-admin-toggle-wrap">
             <button type="button" class="btn-toggle-admin-mode" id="btn-toggle-admin-mode">🔒 Accés Administrador</button>

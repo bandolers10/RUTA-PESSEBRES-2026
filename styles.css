@@ -20,9 +20,9 @@
   --text-light: #e8f0ec;
   --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --radius-sm: 0px;
-  --radius-md: 2px;
-  --radius-lg: 2px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
 *, *::before, *::after {
@@ -497,14 +497,15 @@ body {
   bottom: 24px;
   right: 24px;
   z-index: 900;
-  background: linear-gradient(135deg, #a31c1c 0%, #750d0d 100%);
-  color: white;
-  border: 2px solid var(--accent-gold);
+  background: radial-gradient(circle at 50% 0%, #a81f1f 0%, #6b1212 70%, #420909 100%);
+  color: #f7dc88;
+  border: 2px solid #d4af37;
   padding: 14px 22px;
-  border-radius: 2px;
+  border-radius: 14px;
   font-weight: 800;
-  font-size: 1rem;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  font-size: 0.98rem;
+  letter-spacing: 0.4px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(212, 175, 55, 0.25);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -513,9 +514,10 @@ body {
 }
 
 .btn-floating-add:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 12px 30px rgba(163, 28, 28, 0.5);
-  background: linear-gradient(135deg, #b82323 0%, #8b1212 100%);
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 14px 34px rgba(139, 26, 26, 0.55);
+  background: radial-gradient(circle at 50% 0%, #bf2626 0%, #7d1515 70%, #4d0a0a 100%);
+  color: #ffffff;
 }
 
 .btn-floating-add .plus-icon {
@@ -561,38 +563,70 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   LEAFLET POPUPS PERSONALITZATS
+   LEAFLET POPUPS PERSONALITZATS (MATEIX FORMAT ELEGANT I NADALENC)
    -------------------------------------------------------------------------- */
 .leaflet-popup-content-wrapper {
-  background: var(--cream-light);
-  border: 2px solid var(--accent-gold);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f2e7 100%);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(212, 175, 55, 0.25);
   padding: 0;
   overflow: hidden;
 }
 
+.leaflet-popup-content {
+  margin: 0 !important;
+}
+
 .leaflet-popup-tip {
-  background: var(--accent-gold);
+  background: #d4af37;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.34) !important;
+  color: #ffffff !important;
 }
 
 .pessebre-popup {
-  padding: 16px;
-  max-width: 280px;
+  padding: 0 16px 16px 16px;
+  max-width: 290px;
+  min-width: 245px;
 }
 
 .pessebre-popup-header {
-  border-bottom: 1px solid #e0d8c8;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
+  background: radial-gradient(circle at 50% 0%, #9e1b1b 0%, #6b1212 60%, #3d0a0a 100%);
+  margin: 0 -16px 12px -16px;
+  padding: 16px 36px 14px 16px;
+  border-bottom: 2px solid #d4af37;
+  text-align: left;
 }
 
 .pessebre-popup-title {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--bg-dark-green);
-  line-height: 1.25;
+  font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif;
+  font-size: 1.18rem;
+  font-weight: 900;
+  color: #fdfbf7;
+  line-height: 1.22;
+  margin: 4px 0 0 0;
+  letter-spacing: 0.4px;
 }
 
 .pessebre-popup-muni {
@@ -603,38 +637,46 @@ body {
 }
 
 .pessebre-popup-desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  line-height: 1.35;
+  font-size: 0.86rem;
+  color: #4a3a2c;
+  font-style: italic;
+  background: #fdf8ef;
+  border-left: 3px solid #d4af37;
+  padding: 7px 10px;
+  border-radius: 0 8px 8px 0;
+  margin: 0 0 10px 0;
+  line-height: 1.38;
 }
 
 .pessebre-popup-author {
   font-size: 0.78rem;
-  color: #66776e;
-  margin-bottom: 12px;
+  color: #6b5341;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .pessebre-popup-stats {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 700;
-  color: var(--bg-dark-green);
-  background: #eaf2ee;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 12px;
+  color: #143628;
+  background: #eaf3ed;
+  border: 1px solid #c9dfd1;
+  padding: 7px 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
 }
 
 .btn-visit {
+  box-sizing: border-box;
   width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  border-radius: 10px;
   font-weight: 800;
   font-size: 0.9rem;
   cursor: pointer;
@@ -647,24 +689,28 @@ body {
 }
 
 .btn-visit-not-visited {
-  background: linear-gradient(135deg, #1b4332 0%, #081c15 100%);
-  color: var(--accent-gold);
-  border: 1px solid var(--accent-gold);
+  background: linear-gradient(135deg, #8b1a1a 0%, #52100a 100%);
+  color: #f7dc88;
+  border: 1.5px solid #d4af37;
+  box-shadow: 0 4px 12px rgba(107, 18, 18, 0.28);
 }
 
 .btn-visit-not-visited:hover {
-  background: #2d6a4f;
+  background: linear-gradient(135deg, #a31f1f 0%, #68140d 100%);
+  color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(107, 18, 18, 0.4);
 }
 
 .btn-visit-visited {
-  background: #2a9d8f;
-  color: white;
+  background: linear-gradient(135deg, #1f523b 0%, #0d3322 100%);
+  color: #f7dc88;
+  border: 1.5px solid #d4af37;
   cursor: default;
 }
 
 /* --------------------------------------------------------------------------
-   MODALS I OVERLAYS
+   MODALS I OVERLAYS (ESTIL UNIFICAT AMB CAPÇALERA DE GALA I VORES ARRODONIDES)
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
@@ -672,8 +718,9 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(5, 18, 12, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 18, 13, 0.76);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -690,14 +737,15 @@ body {
 }
 
 .modal-card {
-  background: var(--cream-light);
-  border: 2px solid var(--accent-gold);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f2e7 100%);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  overflow-x: hidden;
+  box-shadow: 0 24px 65px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.25);
   position: relative;
   transform: scale(0.95);
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -708,10 +756,10 @@ body {
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #091f15 0%, #153e2c 100%);
-  color: var(--text-light);
-  padding: 16px 20px;
-  border-bottom: 2px solid var(--accent-gold);
+  background: radial-gradient(circle at 50% 0%, #9e1b1b 0%, #6b1212 58%, #3d0a0a 100%);
+  color: #fdfbf7;
+  padding: 18px 22px;
+  border-bottom: 2px solid #d4af37;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -721,62 +769,78 @@ body {
 }
 
 .modal-title {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--accent-gold);
+  font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #fdfbf7;
+  letter-spacing: 0.8px;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .btn-close-modal {
-  background: transparent;
-  border: none;
-  color: var(--text-light);
-  font-size: 1.4rem;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 1.35rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
-  padding: 4px;
+  padding: 0;
+  transition: all 0.2s ease;
 }
 
 .btn-close-modal:hover {
-  color: var(--accent-gold);
+  background: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+  transform: scale(1.06);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 22px;
 }
 
-/* FORMULARIS */
+/* FORMULARIS UNIFICATS */
 .form-group {
   margin-bottom: 16px;
 }
 
 .form-label {
   display: block;
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: var(--bg-dark-green);
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: #522415;
   margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .form-input, .form-textarea, .form-select {
+  box-sizing: border-box;
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #c8d6cf;
-  border-radius: var(--radius-sm);
-  background: white;
+  padding: 12px 14px;
+  border: 1.5px solid #d8c7b4;
+  border-radius: 10px;
+  background: #ffffff;
   font-family: inherit;
   font-size: 0.95rem;
-  color: var(--text-dark);
-  transition: border-color 0.2s ease;
+  font-weight: 600;
+  color: #2a1a14;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-input:focus, .form-textarea:focus, .form-select:focus {
   outline: none;
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 3px rgba(229, 184, 105, 0.25);
+  border-color: #8b1a1a;
+  box-shadow: 0 0 0 3.5px rgba(139, 26, 26, 0.14);
 }
 
 .location-picker-box {
@@ -786,12 +850,12 @@ body {
 }
 
 .btn-pick-location {
-  background: var(--header-bg);
-  color: var(--accent-gold);
-  border: 1px solid var(--accent-gold);
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
+  background: linear-gradient(135deg, #1f523b 0%, #0d3322 100%);
+  color: #f7dc88;
+  border: 1.5px solid #d4af37;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 800;
   font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
@@ -799,67 +863,77 @@ body {
 }
 
 .btn-pick-location:hover {
-  background: var(--bg-dark-green);
-  color: white;
+  background: linear-gradient(135deg, #28664b 0%, #14452f 100%);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 22px;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1b4332 0%, #081c15 100%);
-  color: var(--accent-gold);
-  border: 1px solid var(--accent-gold);
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #8b1a1a 0%, #52100a 100%);
+  color: #f7dc88;
+  border: 1.5px solid #d4af37;
+  padding: 11px 22px;
+  border-radius: 10px;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   cursor: pointer;
+  box-shadow: 0 5px 14px rgba(107, 18, 18, 0.28);
   transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-  background: #2d6a4f;
+  background: linear-gradient(135deg, #a31f1f 0%, #68140d 100%);
+  color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(107, 18, 18, 0.4);
 }
 
 .btn-secondary {
-  background: #e0e8e4;
-  color: var(--text-dark);
-  border: none;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
+  background: #ede5d8;
+  color: #4a3525;
+  border: 1px solid #d4c5b2;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: #d0dcd6;
+  background: #e2d6c5;
 }
 
 /* --------------------------------------------------------------------------
-   TAULA DE RÀNQUING
+   TAULA DE RÀNQUING I QUADRE D'HONOR (100% COMPLETAT)
    -------------------------------------------------------------------------- */
 .ranking-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 10px;
+  background: #ffffff;
+  border: 1.5px solid #e2d5c3;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .ranking-table th {
-  background: var(--header-bg);
-  color: var(--accent-gold);
+  background: linear-gradient(135deg, #522415 0%, #3a170c 100%);
+  color: #f7dc88;
   text-align: left;
   padding: 12px 14px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .ranking-table th:last-child {
@@ -868,9 +942,13 @@ body {
 
 .ranking-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid #e2ece7;
-  font-size: 0.95rem;
+  border-bottom: 1px solid #f0e8dc;
+  font-size: 0.93rem;
   font-weight: 600;
+}
+
+.ranking-table tr:last-child td {
+  border-bottom: none;
 }
 
 .ranking-table td:last-child {
@@ -878,8 +956,35 @@ body {
 }
 
 .ranking-table tr.current-user-row {
-  background: rgba(229, 184, 105, 0.2);
+  background: rgba(229, 184, 105, 0.22);
   font-weight: 800;
+}
+
+.completed-100-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #dcfce7;
+  color: #14532d;
+  border: 1px solid #86efac;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 1px 8px;
+  border-radius: 12px;
+  margin-left: 4px;
+}
+
+.completed-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fdf6e7;
+  border: 1px solid #e5b869;
+  color: #522415;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
 }
 
 .rank-badge {
@@ -898,39 +1003,51 @@ body {
 .rank-3 { background: #f4a261; color: #5c2c00; }
 
 /* --------------------------------------------------------------------------
-   PANEL D'ADMINISTRACIÓ
+   PANEL D'ADMINISTRACIÓ I PESTANYES DE NAVEGACIÓ
    -------------------------------------------------------------------------- */
 .admin-tab-nav {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   margin-bottom: 16px;
-  border-bottom: 2px solid #d8e5df;
-  padding-bottom: 8px;
+  background: #ede4d6;
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid #dccdb8;
 }
 
 .admin-tab-btn {
+  flex: 1;
   background: transparent;
   border: none;
-  padding: 8px 14px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  padding: 9px 12px;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.84rem;
+  color: #6e5846;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: 9px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-tab-btn:hover {
+  color: #3a1e12;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .admin-tab-btn.active {
-  background: var(--header-bg);
-  color: var(--accent-gold);
+  background: linear-gradient(135deg, #8b1a1a 0%, #52100a 100%);
+  color: #f7dc88;
+  box-shadow: 0 3px 10px rgba(107, 18, 18, 0.28);
 }
 
 .admin-proposal-card {
-  background: white;
-  border: 1px solid #cde0d7;
-  border-radius: var(--radius-md);
-  padding: 14px;
+  background: #ffffff;
+  border: 1.5px solid #e2d5c3;
+  border-radius: 12px;
+  padding: 15px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
 .admin-proposal-title {
@@ -1522,13 +1639,14 @@ body {
 /* POPUP BLOQUEJAT PER USUARIS NO REGISTRATS */
 .pessebre-popup-badge-num {
   display: inline-block;
-  background: #7a1a12;
-  color: #ffffff;
-  font-size: 0.72rem;
+  background: rgba(229, 184, 105, 0.2);
+  border: 1px solid rgba(229, 184, 105, 0.65);
+  color: #f7dc88;
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
   margin-bottom: 4px;
 }
 

@@ -637,12 +637,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAdminPanel();
   });
 
-  // 8. RÀNQUINGS DE PARTICIPANTS (VISITATS, CREATS I MAPA DE CALOR "D'ON VENIM")
-  let currentRankingType = 'visited'; // 'visited', 'created' o 'origins'
+  // 8. RÀNQUINGS DE PARTICIPANTS (VISITES, RUTA COMPLETADA 100% I MAPA DE CALOR "D'ON VENIM")
+  let currentRankingType = 'visited'; // 'visited', 'completed' o 'origins'
   const btnOpenRanking = document.getElementById('btn-open-ranking');
   const btnOpenHeatmap = document.getElementById('btn-open-heatmap');
   const rankingTabVisited = document.getElementById('ranking-tab-visited');
-  const rankingTabCreated = document.getElementById('ranking-tab-created');
+  const rankingTabCompleted = document.getElementById('ranking-tab-completed');
   const rankingTabOrigins = document.getElementById('ranking-tab-origins');
   const rankingViewUsers = document.getElementById('ranking-view-users');
   const rankingViewOrigins = document.getElementById('ranking-view-origins');
@@ -653,10 +653,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let originsHeatCanvas = null;
   const originsMarkerByKey = {};
 
+  function formatCompletionDate(isoStr) {
+    if (!isoStr) return '-';
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return '-';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
   function switchRankingTab(type) {
     currentRankingType = type;
     if (rankingTabVisited) rankingTabVisited.classList.toggle('active', type === 'visited');
-    if (rankingTabCreated) rankingTabCreated.classList.toggle('active', type === 'created');
+    if (rankingTabCompleted) rankingTabCompleted.classList.toggle('active', type === 'completed');
     if (rankingTabOrigins) rankingTabOrigins.classList.toggle('active', type === 'origins');
 
     const descEl = document.getElementById('ranking-desc');
@@ -672,13 +682,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (rankingViewUsers) rankingViewUsers.style.display = 'block';
       if (rankingViewOrigins) rankingViewOrigins.style.display = 'none';
-      if (modalTitleEl) modalTitleEl.innerHTML = "<span>🏆</span> Rànquing de Participants";
-      if (type === 'visited') {
+      if (type === 'completed') {
+        const completedCount = window.db.getCompletedRouteUsers().length;
+        const totalPts = window.db.getApprovedPoints().length;
+        if (modalTitleEl) modalTitleEl.innerHTML = "<span>🏅</span> Ruta Completada (100%)";
+        if (descEl) {
+          descEl.textContent = totalPts > 0
+            ? `Quadre d'Honor: ${completedCount} ${completedCount === 1 ? 'participant ha' : 'participants han'} completat tots els ${totalPts} pessebres de la ruta.`
+            : "Quadre d'Honor dels participants que han completat tota la ruta i la data en què ho han assolit.";
+        }
+        if (headerStatEl) headerStatEl.textContent = 'Data 100% Completat';
+      } else {
+        if (modalTitleEl) modalTitleEl.innerHTML = "<span>🏆</span> Rànquing de Participants";
         if (descEl) descEl.textContent = 'Classificació ordenada per pessebres visitats.';
         if (headerStatEl) headerStatEl.textContent = 'Pessebres visitats';
-      } else {
-        if (descEl) descEl.textContent = 'Classificació ordenada per pessebres creats/proposats.';
-        if (headerStatEl) headerStatEl.textContent = 'Pessebres creats';
       }
       renderRankingTable();
     }
@@ -702,8 +719,8 @@ document.addEventListener('DOMContentLoaded', () => {
     rankingTabVisited.addEventListener('click', () => switchRankingTab('visited'));
   }
 
-  if (rankingTabCreated) {
-    rankingTabCreated.addEventListener('click', () => switchRankingTab('created'));
+  if (rankingTabCompleted) {
+    rankingTabCompleted.addEventListener('click', () => switchRankingTab('completed'));
   }
 
   if (rankingTabOrigins) {
@@ -714,18 +731,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('ranking-tbody');
     if (!tbody) return;
     const currentUser = window.db.getCurrentUser();
-    let leaderboard = [];
-
-    if (currentRankingType === 'created') {
-      leaderboard = window.db.getCreatedLeaderboard();
-    } else {
-      leaderboard = window.db.getLeaderboard();
-    }
+    const isCompletedTab = currentRankingType === 'completed';
+    const leaderboard = isCompletedTab
+      ? window.db.getCompletedRouteUsers()
+      : window.db.getLeaderboard();
 
     tbody.innerHTML = '';
 
     if (leaderboard.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:18px;">Encara no hi ha participants al rànquing. Sigues el primer a entrar!</td></tr>`;
+      const emptyMsg = isCompletedTab
+        ? 'Encara cap participant ha completat el 100% dels pessebres de la ruta. Sigues el primer a completar-los tots!'
+        : 'Encara no hi ha participants al rànquing. Sigues el primer a entrar!';
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:22px 14px;">${emptyMsg}</td></tr>`;
       return;
     }
 
@@ -740,24 +757,43 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (item.rank === 2) rankDisplay = `<span class="rank-badge rank-2">🥈</span>`;
       else if (item.rank === 3) rankDisplay = `<span class="rank-badge rank-3">🥉</span>`;
 
-      const score = currentRankingType === 'created' ? item.createdCount : item.visitsCount;
       const muniTag = item.municipality
         ? `<span class="ranking-muni-chip">📍 ${escapeHTML(item.municipality)}</span>`
         : '';
 
-      tr.innerHTML = `
-        <td style="width: 64px;">${rankDisplay}</td>
-        <td>
-          <div class="ranking-user-cell">
-            <span class="ranking-user-main">
-              <strong>${escapeHTML(item.username)}</strong>
-              ${currentUser && item.id === currentUser.id ? '<span style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-left:3px;">(Tu)</span>' : ''}
-            </span>
-            ${muniTag}
-          </div>
-        </td>
-        <td style="font-weight: 800; color: var(--accent-red);">${score}</td>
-      `;
+      if (isCompletedTab) {
+        const dateStr = formatCompletionDate(item.completedAt);
+        tr.innerHTML = `
+          <td style="width: 64px;">${rankDisplay}</td>
+          <td>
+            <div class="ranking-user-cell">
+              <span class="ranking-user-main">
+                <strong>${escapeHTML(item.username)}</strong>
+                <span class="completed-100-pill">✓ ${item.visitsCount}/${item.totalRequired}</span>
+                ${currentUser && item.id === currentUser.id ? '<span style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-left:3px;">(Tu)</span>' : ''}
+              </span>
+              ${muniTag}
+            </div>
+          </td>
+          <td>
+            <span class="completed-date-badge">📅 ${dateStr}</span>
+          </td>
+        `;
+      } else {
+        tr.innerHTML = `
+          <td style="width: 64px;">${rankDisplay}</td>
+          <td>
+            <div class="ranking-user-cell">
+              <span class="ranking-user-main">
+                <strong>${escapeHTML(item.username)}</strong>
+                ${currentUser && item.id === currentUser.id ? '<span style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-left:3px;">(Tu)</span>' : ''}
+              </span>
+              ${muniTag}
+            </div>
+          </td>
+          <td style="font-weight: 800; color: var(--accent-red);">${item.visitsCount}</td>
+        `;
+      }
       tbody.appendChild(tr);
     });
   }
@@ -1171,31 +1207,11 @@ document.addEventListener('DOMContentLoaded', () => {
     authMuniSuggestions.style.display = 'block';
   }
 
-  function syncQuickChipsActive() {
-    const val = (authMuniInput ? authMuniInput.value : '').trim().toLowerCase();
-    document.querySelectorAll('.muni-quick-chip').forEach(chip => {
-      const chipVal = (chip.getAttribute('data-muni') || '').toLowerCase();
-      chip.classList.toggle('active', val !== '' && val === chipVal);
-    });
-  }
-
-  document.querySelectorAll('.muni-quick-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const mName = chip.getAttribute('data-muni') || '';
-      if (authMuniInput) {
-        authMuniInput.value = mName;
-        syncQuickChipsActive();
-      }
-      if (authMuniSuggestions) authMuniSuggestions.style.display = 'none';
-    });
-  });
-
   if (authMuniInput) {
     authMuniInput.addEventListener('focus', () => {
       renderMuniSuggestions(authMuniInput.value);
     });
     authMuniInput.addEventListener('input', () => {
-      syncQuickChipsActive();
       renderMuniSuggestions(authMuniInput.value);
     });
     authMuniInput.addEventListener('blur', () => {

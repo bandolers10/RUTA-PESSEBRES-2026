@@ -16,10 +16,10 @@ window.IS_DEMO_MODE = IS_DEMO_MODE;
 
 const DB_KEYS = IS_DEMO_MODE
   ? {
-      USERS: 'pessebres_2026_demo_users_v3',
-      POINTS: 'pessebres_2026_demo_points_v3',
-      VISITS: 'pessebres_2026_demo_visits_v3',
-      CURRENT_USER: 'pessebres_2026_demo_current_user_v3',
+      USERS: 'pessebres_2026_demo_users_v4',
+      POINTS: 'pessebres_2026_demo_points_v4',
+      VISITS: 'pessebres_2026_demo_visits_v4',
+      CURRENT_USER: 'pessebres_2026_demo_current_user_v4',
       GEOCACHE: 'pessebres_2026_muni_geocache'
     }
   : {
@@ -556,21 +556,28 @@ function buildDemoDataset() {
   const visits = [];
   let vId = 1;
   participantUsers.forEach((u, idx) => {
-    // Alguns participants molt actius (35-50 pessebres), altres mitjans (12-34), altres casuals (2-11)
+    // Els primers 14 participants han completat els 50 pessebres (100% de la ruta) en dates diferents
     let targetVisits;
-    if (idx < 12) {
-      targetVisits = 50 - (idx % 4); // Top pessebristes (47 a 50 pessebres)
+    let step;
+    if (idx < 14) {
+      targetVisits = 50;
+      step = 1; // Visiten tots els 50 pessebres sense excepció
     } else if (idx < 60) {
-      targetVisits = 20 + Math.floor(rand() * 25);
+      targetVisits = 20 + Math.floor(rand() * 26);
+      step = ((idx % 6) * 2 + 1) % 50 || 1; // Coprimers amb 50 (1, 3, 7, 9, 11)
+      if (step === 5) step = 7;
     } else if (idx < 140) {
       targetVisits = 8 + Math.floor(rand() * 15);
+      step = 3;
     } else {
       targetVisits = 1 + Math.floor(rand() * 8);
+      step = 7;
     }
 
-    const step = (idx % 7) + 1;
     let startPt = idx % 50;
     const visitedSet = new Set();
+    // Data en què aquest participant completa el seu últim pessebre
+    const userFinishDay = 8 + idx; // dies esglaonats de desembre
 
     for (let k = 0; k < targetVisits; k++) {
       const ptIdx = (startPt + k * step) % 50;
@@ -578,13 +585,17 @@ function buildDemoDataset() {
       visitedSet.add(ptIdx);
 
       const hasRating = rand() > 0.22;
-      const rating = hasRating ? (3 + Math.floor(rand() * 3)) : null; // 3, 4 o 5 boles de Nadal
+      const rating = hasRating ? (3 + Math.floor(rand() * 3)) : null;
+      const visitDate = idx < 14
+        ? new Date(Date.UTC(2026, 11, Math.min(28, userFinishDay), 9 + (k % 9), (idx * 7 + k) % 60)).toISOString()
+        : new Date(Date.UTC(2026, 11, 1 + ((vId + idx) % 24), 10, vId % 60)).toISOString();
+
       visits.push({
         id: `demo_v_${vId++}`,
         user_id: u.id,
         nativity_point_id: `pt_${ptIdx + 1}`,
         rating,
-        created_at: new Date(Date.UTC(2026, 10, 10 + (vId % 15), 10, vId % 60)).toISOString()
+        created_at: visitDate
       });
     }
   });
@@ -1343,35 +1354,55 @@ class PessebresDB {
     }));
   }
 
-  getCreatedLeaderboard() {
-    const users = this.getUsers().filter(u => u.role !== 'ADMIN');
-    const points = this.getApprovedPoints();
+  // --- LLISTAT D'HONOR: PARTICIPANTS QUE HAN COMPLETAT EL 100% DE LA RUTA I DATA ---
+  getCompletedRouteUsers() {
+    const approvedPoints = this.getApprovedPoints();
+    if (approvedPoints.length === 0) return [];
 
-    const userCreatedCounts = {};
+    const totalRequired = approvedPoints.length;
+    const approvedIds = new Set(approvedPoints.map(p => p.id));
+    const users = this.getUsers().filter(u => u.role !== 'ADMIN');
+    const visits = this.getVisits();
+
+    // Agrupar visites vàlides per usuari
+    const visitsByUser = {};
     users.forEach(u => {
-      userCreatedCounts[u.id] = 0;
+      visitsByUser[u.id] = new Map();
     });
 
-    points.forEach(p => {
-      const matchUser = users.find(u => u.username.toLowerCase() === (p.submitted_by || '').toLowerCase());
-      if (matchUser) {
-        userCreatedCounts[matchUser.id] += 1;
+    visits.forEach(v => {
+      if (visitsByUser[v.user_id] && approvedIds.has(v.nativity_point_id)) {
+        const existingDate = visitsByUser[v.user_id].get(v.nativity_point_id);
+        const curDate = v.created_at || new Date().toISOString();
+        if (!existingDate || curDate < existingDate) {
+          visitsByUser[v.user_id].set(v.nativity_point_id, curDate);
+        }
       }
     });
 
-    const leaderboard = users.map(u => {
-      const muniMeta = decodeMunicipalityMeta(u);
-      return {
-        id: u.id,
-        username: u.username,
-        municipality: muniMeta.name,
-        createdCount: userCreatedCounts[u.id] || 0
-      };
+    const completedList = [];
+    users.forEach(u => {
+      const userMap = visitsByUser[u.id];
+      if (userMap && userMap.size >= totalRequired) {
+        // La data de finalització és la data en què va marcar l'últim pessebre per completar la ruta
+        const dates = Array.from(userMap.values()).sort();
+        const completedAt = dates[dates.length - 1] || u.created_at || new Date().toISOString();
+        const muniMeta = decodeMunicipalityMeta(u);
+        completedList.push({
+          id: u.id,
+          username: u.username,
+          municipality: muniMeta.name,
+          visitsCount: userMap.size,
+          totalRequired,
+          completedAt
+        });
+      }
     });
 
-    leaderboard.sort((a, b) => b.createdCount - a.createdCount);
+    // Ordenar cronològicament: primer qui va completar la ruta abans
+    completedList.sort((a, b) => (a.completedAt || '').localeCompare(b.completedAt || ''));
 
-    return leaderboard.map((item, index) => ({
+    return completedList.map((item, index) => ({
       ...item,
       rank: index + 1
     }));
