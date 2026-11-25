@@ -1,13 +1,13 @@
 CREATE TABLE IF NOT EXISTS public.users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  password TEXT,
+  municipality TEXT DEFAULT 'Sant Feliu Sasserra',
   email TEXT,
   role TEXT DEFAULT 'USER',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS municipality TEXT DEFAULT 'Sant Feliu Sasserra';
 
 CREATE TABLE IF NOT EXISTS public.nativity_points (
   id TEXT PRIMARY KEY,
@@ -76,6 +76,6 @@ CREATE POLICY "Permetre actualitzar visita" ON public.visits FOR UPDATE USING (t
 DROP POLICY IF EXISTS "Permetre desmarcar visita" ON public.visits;
 CREATE POLICY "Permetre desmarcar visita" ON public.visits FOR DELETE USING (true);
 
-INSERT INTO public.users (id, username, password, email, role) VALUES
-  ('usr_admin', 'admin', 'adminpessebres3726c9b', 'admin@pessebres.cat', 'ADMIN')
-ON CONFLICT (id) DO UPDATE SET password = 'adminpessebres3726c9b', role = 'ADMIN';
+INSERT INTO public.users (id, username, municipality, email, role) VALUES
+  ('usr_admin', 'admin', 'Sant Feliu Sasserra', 'muni:Sant Feliu Sasserra|41.9461,2.0211', 'ADMIN')
+ON CONFLICT (id) DO UPDATE SET role = 'ADMIN';

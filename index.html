@@ -63,6 +63,10 @@
           <span>🏆</span> RÀNQUING
         </button>
 
+        <button class="btn-header btn-heatmap-pill" id="btn-open-heatmap" title="Mapa de Calor de les poblacions dels participants">
+          <span>🔥</span> D'ON VENIM
+        </button>
+
         <!-- SELECTOR DE CAPA DE MAPA (OFICIAL / SATÈL·LIT) -->
         <div class="map-layer-switcher" id="map-layer-switcher">
           <button type="button" class="btn-layer-toggle active" id="btn-layer-streets" title="Mapa Oficial de carrers">
@@ -164,40 +168,88 @@
   </div>
 
   <!-- ----------------------------------------------------------------------
-       MODAL 2: RÀNQUING
+       MODAL 2: RÀNQUING I MAPA DE CALOR ("D'ON VENIM")
        ---------------------------------------------------------------------- -->
   <div class="modal-overlay" id="modal-ranking">
-    <div class="modal-card">
+    <div class="modal-card" id="modal-ranking-card" style="max-width: 680px;">
       <div class="modal-header">
-        <h2 class="modal-title"><span>🏆</span> Rànquing de Participants</h2>
+        <h2 class="modal-title" id="modal-ranking-title"><span>🏆</span> Rànquing i Participació</h2>
         <button class="btn-close-modal">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="admin-tab-nav" style="margin-bottom: 12px;">
+        <div class="admin-tab-nav" style="margin-bottom: 12px; flex-wrap: wrap;">
           <button type="button" class="admin-tab-btn active" id="ranking-tab-visited">🏆 Més Visitats</button>
           <button type="button" class="admin-tab-btn" id="ranking-tab-created">🎄 Més Creats</button>
+          <button type="button" class="admin-tab-btn" id="ranking-tab-origins">🔥 D'on Venim</button>
         </div>
+
         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;" id="ranking-desc">
           Classificació ordenada automàticament per pessebres visitats.
         </p>
-        <table class="ranking-table">
-          <thead>
-            <tr>
-              <th>Posició</th>
-              <th>Usuari</th>
-              <th id="ranking-header-stat">Pessebres visitats</th>
-            </tr>
-          </thead>
-          <tbody id="ranking-tbody">
-            <!-- Omplert dinàmicament per JS -->
-          </tbody>
-        </table>
+
+        <!-- VISTA 1: TAULA DE PARTICIPANTS (VISITATS / CREATS) -->
+        <div id="ranking-view-users">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>Posició</th>
+                <th>Participant</th>
+                <th id="ranking-header-stat">Pessebres visitats</th>
+              </tr>
+            </thead>
+            <tbody id="ranking-tbody">
+              <!-- Omplert dinàmicament per JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- VISTA 2: MAPA DE CALOR I RÀNQUING DE POBLACIONS ("D'ON VENIM") -->
+        <div id="ranking-view-origins" style="display: none;">
+          <div class="origins-kpi-row">
+            <div class="origins-kpi-card">
+              <span class="origins-kpi-val" id="origins-kpi-munis">0</span>
+              <span class="origins-kpi-label">📍 Poblacions</span>
+            </div>
+            <div class="origins-kpi-card">
+              <span class="origins-kpi-val" id="origins-kpi-users">0</span>
+              <span class="origins-kpi-label">👥 Participants</span>
+            </div>
+            <div class="origins-kpi-card origins-kpi-top">
+              <span class="origins-kpi-val" id="origins-kpi-top-name">-</span>
+              <span class="origins-kpi-label">🏅 Població més activa</span>
+            </div>
+          </div>
+
+          <div class="origins-heatmap-wrapper">
+            <div id="origins-heatmap-map" class="origins-heatmap-map"></div>
+            <div class="origins-heatmap-legend">
+              <span>❄️ Menys</span>
+              <div class="origins-gradient-bar"></div>
+              <span>🔥 Més participants</span>
+            </div>
+          </div>
+
+          <h3 class="origins-table-title">🏘️ Top Poblacions Participants</h3>
+          <table class="ranking-table origins-ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Població</th>
+                <th>Participants</th>
+                <th>Visites</th>
+              </tr>
+            </thead>
+            <tbody id="origins-tbody">
+              <!-- Omplert dinàmicament per JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ----------------------------------------------------------------------
-       MODAL 3: IDENTIFICACIÓ I PERFIL INTUITIU
+       MODAL 3: IDENTIFICACIÓ ULTRA-FÀCIL (NOM + POBLACIÓ) I PERFIL
        ---------------------------------------------------------------------- -->
   <div class="modal-overlay" id="modal-profile">
     <div class="modal-card auth-modal-card">
@@ -208,7 +260,7 @@
           <button class="btn-close-modal auth-close-btn">&times;</button>
           <div class="auth-avatar-circle">🎅</div>
           <div class="auth-profile-name" id="profile-username">Usuari</div>
-          <div class="auth-profile-sub" id="profile-email"></div>
+          <div class="auth-profile-muni-badge" id="profile-municipality">📍 Sant Feliu Sasserra</div>
           <div class="auth-rank-chip" id="profile-rank-text">#1 al rànquing</div>
         </div>
         <div class="auth-profile-body">
@@ -220,36 +272,46 @@
         </div>
       </div>
 
-      <!-- VISTA IDENTIFICACIÓ / REGISTRE SENZILL I INTUITIU -->
+      <!-- VISTA ENTRADA DIRECTA AMB NOM + POBLACIÓ (SENSE CONTRASENYES NI CORREUS) -->
       <div id="profile-view-auth">
         <div class="auth-welcome-banner">
           <button class="btn-close-modal auth-close-btn">&times;</button>
           <div class="auth-welcome-icon">🎄</div>
-          <h2 class="auth-welcome-title" id="auth-header-title">Ruta dels Pessebres</h2>
-          <p class="auth-welcome-sub" id="auth-header-sub">Escriu el teu nom i contrasenya per validar els pessebres que visites i sortir al rànquing!</p>
+          <h2 class="auth-welcome-title" id="auth-header-title">Entra a la Ruta</h2>
+          <p class="auth-welcome-sub" id="auth-header-sub">Posa només el teu nom i de quin poble vens per marcar els pessebres i sumar al Mapa de Calor!</p>
         </div>
 
         <div class="auth-form-body">
-          <!-- PESTANYES PER TRIAR REGISTRAR-SE O INICIAR SESSIÓ -->
-          <div class="auth-tab-switch" id="auth-tab-switch">
-            <button type="button" class="auth-tab-btn active" id="auth-tab-register">✨ REGISTRAR-SE</button>
-            <button type="button" class="auth-tab-btn" id="auth-tab-login">🔑 INICIAR SESSIÓ</button>
-          </div>
+          <form id="form-unified-auth" autocomplete="off">
+            <div class="auth-input-group">
+              <label class="auth-input-label" for="auth-username" id="auth-label-username">👤 El teu nom o àlies</label>
+              <input type="text" id="auth-username" class="auth-input" placeholder="Ex: Joan, Família Serra..." required>
+            </div>
 
-          <form id="form-unified-auth">
-            <div class="auth-input-group">
-              <label class="auth-input-label" for="auth-username" id="auth-label-username">Nom d'usuari / participant</label>
-              <input type="text" id="auth-username" class="auth-input" placeholder="Escriu el teu nom (o 'admin')..." required autocomplete="username">
+            <!-- CAMP POBLACIÓ AMB AUTOCOMPLETAT DE CATALUNYA -->
+            <div class="auth-input-group auth-muni-group" id="auth-muni-group">
+              <label class="auth-input-label" for="auth-municipality">📍 De quina població vens?</label>
+              <div class="muni-autocomplete-wrap">
+                <input type="text" id="auth-municipality" class="auth-input" placeholder="Escriu el teu poble o ciutat..." autocomplete="off">
+                <ul class="muni-suggestions-list" id="auth-muni-suggestions" style="display: none;"></ul>
+              </div>
             </div>
-            <div class="auth-input-group">
-              <label class="auth-input-label" for="auth-password">Contrasenya</label>
-              <input type="password" id="auth-password" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
+
+            <!-- CAMP OCULT PER A CLAU D'ADMINISTRADOR (NOMÉS ES MOSTRA SI S'ACTIVA EL MODE ADMIN) -->
+            <div class="auth-input-group" id="auth-admin-pass-group" style="display: none;">
+              <label class="auth-input-label" for="auth-password">🔑 Clau d'Administrador</label>
+              <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
             </div>
-            <button type="submit" class="auth-btn-primary" id="auth-submit-btn">✨ REGISTRAR-ME I ENTRAR</button>
+
+            <button type="submit" class="auth-btn-primary" id="auth-submit-btn">🎄 ENTRAR A LA RUTA</button>
           </form>
 
           <div class="auth-help-note" id="auth-help-note">
-            📝 <strong>Nou participant?</strong> Escull el teu nom i contrasenya per crear el teu perfil i començar a marcar pessebres!
+            🔒 <strong>100% Fàcil i Privat:</strong> No demanem correu ni contrasenya. La teva sessió quedarà guardada al mòbil perquè no hagis de tornar a entrar cada cop!
+          </div>
+
+          <div class="auth-admin-toggle-wrap">
+            <button type="button" class="btn-toggle-admin-mode" id="btn-toggle-admin-mode">🔒 Accés Administrador</button>
           </div>
         </div>
       </div>

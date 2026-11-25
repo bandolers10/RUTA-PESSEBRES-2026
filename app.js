@@ -637,47 +637,97 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAdminPanel();
   });
 
-  // 8. RÀNQUINGS DE PARTICIPANTS (VISITATS I CREATS)
-  let currentRankingType = 'visited'; // 'visited' o 'created'
+  // 8. RÀNQUINGS DE PARTICIPANTS (VISITATS, CREATS I MAPA DE CALOR "D'ON VENIM")
+  let currentRankingType = 'visited'; // 'visited', 'created' o 'origins'
   const btnOpenRanking = document.getElementById('btn-open-ranking');
+  const btnOpenHeatmap = document.getElementById('btn-open-heatmap');
   const rankingTabVisited = document.getElementById('ranking-tab-visited');
   const rankingTabCreated = document.getElementById('ranking-tab-created');
+  const rankingTabOrigins = document.getElementById('ranking-tab-origins');
+  const rankingViewUsers = document.getElementById('ranking-view-users');
+  const rankingViewOrigins = document.getElementById('ranking-view-origins');
 
-  btnOpenRanking.addEventListener('click', () => {
-    renderRankingTable();
-    showModal('modal-ranking');
-  });
+  // Mapa de Calor de Poblacions (Leaflet + Canvas Tèrmic)
+  let originsMap = null;
+  let originsMarkersLayer = null;
+  let originsHeatCanvas = null;
+  const originsMarkerByKey = {};
 
-  rankingTabVisited.addEventListener('click', () => {
-    currentRankingType = 'visited';
-    rankingTabVisited.classList.add('active');
-    rankingTabCreated.classList.remove('active');
-    document.getElementById('ranking-desc').textContent = 'Classificació ordenada per pessebres visitats.';
-    document.getElementById('ranking-header-stat').textContent = 'Pessebres visitats';
-    renderRankingTable();
-  });
+  function switchRankingTab(type) {
+    currentRankingType = type;
+    if (rankingTabVisited) rankingTabVisited.classList.toggle('active', type === 'visited');
+    if (rankingTabCreated) rankingTabCreated.classList.toggle('active', type === 'created');
+    if (rankingTabOrigins) rankingTabOrigins.classList.toggle('active', type === 'origins');
 
-  rankingTabCreated.addEventListener('click', () => {
-    currentRankingType = 'created';
-    rankingTabCreated.classList.add('active');
-    rankingTabVisited.classList.remove('active');
-    document.getElementById('ranking-desc').textContent = 'Classificació ordenada per pessebres creats/proposats.';
-    document.getElementById('ranking-header-stat').textContent = 'Pessebres creats';
-    renderRankingTable();
-  });
+    const descEl = document.getElementById('ranking-desc');
+    const headerStatEl = document.getElementById('ranking-header-stat');
+    const modalTitleEl = document.getElementById('modal-ranking-title');
+
+    if (type === 'origins') {
+      if (rankingViewUsers) rankingViewUsers.style.display = 'none';
+      if (rankingViewOrigins) rankingViewOrigins.style.display = 'block';
+      if (descEl) descEl.textContent = "Mapa de calor i rànquing de les poblacions d'on vénen els participants de la Ruta dels Pessebres.";
+      if (modalTitleEl) modalTitleEl.innerHTML = "<span>🔥</span> D'on Venim · Mapa de Calor";
+      renderOriginsHeatmapAndTable();
+    } else {
+      if (rankingViewUsers) rankingViewUsers.style.display = 'block';
+      if (rankingViewOrigins) rankingViewOrigins.style.display = 'none';
+      if (modalTitleEl) modalTitleEl.innerHTML = "<span>🏆</span> Rànquing de Participants";
+      if (type === 'visited') {
+        if (descEl) descEl.textContent = 'Classificació ordenada per pessebres visitats.';
+        if (headerStatEl) headerStatEl.textContent = 'Pessebres visitats';
+      } else {
+        if (descEl) descEl.textContent = 'Classificació ordenada per pessebres creats/proposats.';
+        if (headerStatEl) headerStatEl.textContent = 'Pessebres creats';
+      }
+      renderRankingTable();
+    }
+  }
+
+  if (btnOpenRanking) {
+    btnOpenRanking.addEventListener('click', () => {
+      switchRankingTab('visited');
+      showModal('modal-ranking');
+    });
+  }
+
+  if (btnOpenHeatmap) {
+    btnOpenHeatmap.addEventListener('click', () => {
+      showModal('modal-ranking');
+      switchRankingTab('origins');
+    });
+  }
+
+  if (rankingTabVisited) {
+    rankingTabVisited.addEventListener('click', () => switchRankingTab('visited'));
+  }
+
+  if (rankingTabCreated) {
+    rankingTabCreated.addEventListener('click', () => switchRankingTab('created'));
+  }
+
+  if (rankingTabOrigins) {
+    rankingTabOrigins.addEventListener('click', () => switchRankingTab('origins'));
+  }
 
   function renderRankingTable() {
     const tbody = document.getElementById('ranking-tbody');
+    if (!tbody) return;
     const currentUser = window.db.getCurrentUser();
     let leaderboard = [];
 
-    if (currentRankingType === 'visited') {
-      leaderboard = window.db.getLeaderboard();
-    } else {
+    if (currentRankingType === 'created') {
       leaderboard = window.db.getCreatedLeaderboard();
+    } else {
+      leaderboard = window.db.getLeaderboard();
     }
 
     tbody.innerHTML = '';
+
+    if (leaderboard.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:18px;">Encara no hi ha participants al rànquing. Sigues el primer a entrar!</td></tr>`;
+      return;
+    }
 
     leaderboard.forEach(item => {
       const tr = document.createElement('tr');
@@ -690,15 +740,21 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (item.rank === 2) rankDisplay = `<span class="rank-badge rank-2">🥈</span>`;
       else if (item.rank === 3) rankDisplay = `<span class="rank-badge rank-3">🥉</span>`;
 
-      const score = currentRankingType === 'visited' ? item.visitsCount : item.createdCount;
+      const score = currentRankingType === 'created' ? item.createdCount : item.visitsCount;
+      const muniTag = item.municipality
+        ? `<span class="ranking-muni-chip">📍 ${escapeHTML(item.municipality)}</span>`
+        : '';
 
       tr.innerHTML = `
-        <td style="width: 70px;">${rankDisplay}</td>
+        <td style="width: 64px;">${rankDisplay}</td>
         <td>
-          <span style="display:inline-flex; align-items:center; gap:4px;">
-            <strong>${escapeHTML(item.username)}</strong>
-            ${currentUser && item.id === currentUser.id ? '<span style="font-size:0.8rem; color:var(--text-muted); font-weight:700; margin-left:3px;">(Tu)</span>' : ''}
-          </span>
+          <div class="ranking-user-cell">
+            <span class="ranking-user-main">
+              <strong>${escapeHTML(item.username)}</strong>
+              ${currentUser && item.id === currentUser.id ? '<span style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-left:3px;">(Tu)</span>' : ''}
+            </span>
+            ${muniTag}
+          </div>
         </td>
         <td style="font-weight: 800; color: var(--accent-red);">${score}</td>
       `;
@@ -706,10 +762,253 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 9. IDENTIFICACIÓ SENZILLA I GESTIÓ D'USUARI
+  // --- MAPA DE CALOR INTERACTIU I TAULA DE POBLACIONS ("D'ON VENIM") ---
+  function ensureOriginsHeatmapMap() {
+    const mapContainer = document.getElementById('origins-heatmap-map');
+    if (!mapContainer) return null;
+
+    if (!originsMap) {
+      originsMap = L.map('origins-heatmap-map', {
+        center: [41.88, 1.98],
+        zoom: 9,
+        zoomControl: true
+      });
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Mapes &copy; Esri | Mapa de Calor Pessebres 2026',
+        maxZoom: 16
+      }).addTo(originsMap);
+
+      // Creem un canvas superposat al pane d'overlay per pintar l'efecte tèrmic de calor
+      const overlayPane = originsMap.getPanes().overlayPane;
+      originsHeatCanvas = document.createElement('canvas');
+      originsHeatCanvas.className = 'leaflet-zoom-animated origins-thermal-canvas';
+      originsHeatCanvas.style.pointerEvents = 'none';
+      originsHeatCanvas.style.position = 'absolute';
+      originsHeatCanvas.style.top = '0';
+      originsHeatCanvas.style.left = '0';
+      originsHeatCanvas.style.zIndex = '250';
+      overlayPane.appendChild(originsHeatCanvas);
+
+      originsMarkersLayer = L.layerGroup().addTo(originsMap);
+
+      originsMap.on('moveend zoomend resize', () => {
+        drawOriginsThermalOverlay();
+      });
+    }
+
+    return originsMap;
+  }
+
+  function drawOriginsThermalOverlay() {
+    if (!originsMap || !originsHeatCanvas) return;
+    const size = originsMap.getSize();
+    if (size.x <= 0 || size.y <= 0) return;
+
+    const topLeft = originsMap.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(originsHeatCanvas, topLeft);
+    originsHeatCanvas.width = size.x;
+    originsHeatCanvas.height = size.y;
+
+    const ctx = originsHeatCanvas.getContext('2d');
+    ctx.clearRect(0, 0, size.x, size.y);
+
+    const muniStats = window.db.getMunicipalityStats();
+    if (muniStats.length === 0) return;
+
+    const maxUsers = Math.max(...muniStats.map(m => m.usersCount), 1);
+    const zoom = originsMap.getZoom();
+    const baseRadius = Math.max(28, Math.min(72, (zoom - 5) * 11));
+
+    muniStats.forEach(item => {
+      if (!item.lat || !item.lng) return;
+      const pt = originsMap.latLngToContainerPoint([item.lat, item.lng]);
+      if (pt.x < -120 || pt.y < -120 || pt.x > size.x + 120 || pt.y > size.y + 120) return;
+
+      const intensity = Math.max(0.28, Math.min(1, item.usersCount / maxUsers));
+      const r = baseRadius * (0.75 + intensity * 0.65);
+
+      const grad = ctx.createRadialGradient(pt.x, pt.y, r * 0.08, pt.x, pt.y, r);
+      if (intensity >= 0.75) {
+        grad.addColorStop(0, 'rgba(220, 20, 20, 0.82)');
+        grad.addColorStop(0.35, 'rgba(255, 110, 0, 0.62)');
+        grad.addColorStop(0.68, 'rgba(255, 215, 0, 0.32)');
+        grad.addColorStop(1, 'rgba(42, 157, 143, 0)');
+      } else if (intensity >= 0.45) {
+        grad.addColorStop(0, 'rgba(255, 95, 0, 0.74)');
+        grad.addColorStop(0.42, 'rgba(255, 200, 0, 0.48)');
+        grad.addColorStop(0.75, 'rgba(42, 157, 143, 0.22)');
+        grad.addColorStop(1, 'rgba(42, 157, 143, 0)');
+      } else {
+        grad.addColorStop(0, 'rgba(255, 180, 0, 0.65)');
+        grad.addColorStop(0.48, 'rgba(42, 157, 143, 0.42)');
+        grad.addColorStop(0.8, 'rgba(59, 130, 246, 0.18)');
+        grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
+      }
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function renderOriginsHeatmapAndTable() {
+    const muniStats = window.db.getMunicipalityStats();
+    const totalUsers = muniStats.reduce((acc, m) => acc + m.usersCount, 0);
+
+    // 1. KPIs superiors
+    const kpiMunis = document.getElementById('origins-kpi-munis');
+    const kpiUsers = document.getElementById('origins-kpi-users');
+    const kpiTopName = document.getElementById('origins-kpi-top-name');
+
+    if (kpiMunis) kpiMunis.textContent = muniStats.length;
+    if (kpiUsers) kpiUsers.textContent = totalUsers;
+    if (kpiTopName) kpiTopName.textContent = muniStats.length > 0 ? muniStats[0].name : '-';
+
+    // 2. Taula Top Poblacions
+    const originsTbody = document.getElementById('origins-tbody');
+    if (originsTbody) {
+      originsTbody.innerHTML = '';
+      if (muniStats.length === 0) {
+        originsTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:18px;">Encara no hi ha poblacions registrades. Entra amb el teu nom i població per inaugurar el Mapa de Calor!</td></tr>`;
+      } else {
+        muniStats.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.className = 'origins-row-clickable';
+          let rankBadge = `#${item.rank}`;
+          if (item.rank === 1) rankBadge = `<span class="rank-badge rank-1">🥇</span>`;
+          else if (item.rank === 2) rankBadge = `<span class="rank-badge rank-2">🥈</span>`;
+          else if (item.rank === 3) rankBadge = `<span class="rank-badge rank-3">🥉</span>`;
+
+          tr.innerHTML = `
+            <td style="width: 54px;">${rankBadge}</td>
+            <td>
+              <div class="origins-muni-cell">
+                <strong>📍 ${escapeHTML(item.name)}</strong>
+                ${item.comarca ? `<span class="origins-comarca-sub">${escapeHTML(item.comarca)}</span>` : ''}
+                <div class="origins-progress-track">
+                  <div class="origins-progress-fill" style="width: ${Math.max(6, item.percentage)}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td style="font-weight: 800; color: #522415;">
+              ${item.usersCount} <span style="font-size:0.76rem; color:var(--text-muted); font-weight:600;">(${item.percentage}%)</span>
+            </td>
+            <td style="font-weight: 800; color: var(--accent-red); text-align:right;">🎄 ${item.visitsCount}</td>
+          `;
+
+          tr.addEventListener('click', () => {
+            if (originsMap && item.lat && item.lng) {
+              originsMap.flyTo([item.lat, item.lng], 12, { duration: 0.8 });
+              const mk = originsMarkerByKey[item.name.toLowerCase()];
+              if (mk) mk.openPopup();
+            }
+          });
+          originsTbody.appendChild(tr);
+        });
+      }
+    }
+
+    // 3. Mapa de Calor amb Leaflet
+    setTimeout(() => {
+      const oMap = ensureOriginsHeatmapMap();
+      if (!oMap) return;
+      oMap.invalidateSize();
+
+      if (originsMarkersLayer) originsMarkersLayer.clearLayers();
+      Object.keys(originsMarkerByKey).forEach(k => delete originsMarkerByKey[k]);
+
+      const maxUsers = Math.max(...muniStats.map(m => m.usersCount), 1);
+      const bounds = [];
+
+      muniStats.forEach(item => {
+        if (!item.lat || !item.lng) return;
+        bounds.push([item.lat, item.lng]);
+        const ratio = item.usersCount / maxUsers;
+        const heatClass = ratio >= 0.7 ? 'heat-pin-hot' : (ratio >= 0.35 ? 'heat-pin-warm' : 'heat-pin-cool');
+
+        const icon = L.divIcon({
+          className: 'custom-origins-heat-icon',
+          html: `
+            <div class="origins-heat-pin ${heatClass}" title="${escapeHTML(item.name)}: ${item.usersCount} participants">
+              <span>${item.usersCount}</span>
+            </div>
+          `,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+          popupAnchor: [0, -16]
+        });
+
+        const marker = L.marker([item.lat, item.lng], { icon });
+        marker.bindPopup(`
+          <div style="text-align:center; padding:4px 6px;">
+            <div style="font-weight:900; color:#7a1a12; font-size:0.98rem;">📍 ${escapeHTML(item.name)}</div>
+            ${item.comarca ? `<div style="font-size:0.75rem; color:#666; margin-bottom:6px;">${escapeHTML(item.comarca)}</div>` : ''}
+            <div style="font-size:0.84rem; font-weight:700; color:#1b4332;">👥 <strong>${item.usersCount}</strong> ${item.usersCount === 1 ? 'participant' : 'participants'} (${item.percentage}%)</div>
+            <div style="font-size:0.82rem; font-weight:700; color:#522415; margin-top:2px;">🎄 <strong>${item.visitsCount}</strong> pessebres visitats</div>
+          </div>
+        `);
+        originsMarkersLayer.addLayer(marker);
+        originsMarkerByKey[item.name.toLowerCase()] = marker;
+      });
+
+      if (bounds.length === 1) {
+        oMap.setView(bounds[0], 11);
+      } else if (bounds.length > 1) {
+        oMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 11 });
+      } else {
+        oMap.setView([41.9461, 2.0211], 9);
+      }
+
+      drawOriginsThermalOverlay();
+    }, 120);
+  }
+
+  // 9. IDENTIFICACIÓ ULTRA-FÀCIL (NOM + POBLACIÓ) I GESTIÓ D'USUARI
+  let isAdminAuthMode = false;
+
+  function updateAuthModalMode(adminMode) {
+    isAdminAuthMode = Boolean(adminMode);
+    const muniGroup = document.getElementById('auth-muni-group');
+    const adminPassGroup = document.getElementById('auth-admin-pass-group');
+    const authHeaderTitle = document.getElementById('auth-header-title');
+    const authHeaderSub = document.getElementById('auth-header-sub');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const btnToggleAdmin = document.getElementById('btn-toggle-admin-mode');
+    const uInput = document.getElementById('auth-username');
+    const pInput = document.getElementById('auth-password');
+
+    if (isAdminAuthMode) {
+      if (muniGroup) muniGroup.style.display = 'none';
+      if (adminPassGroup) adminPassGroup.style.display = 'block';
+      if (authHeaderTitle) authHeaderTitle.textContent = "Accés Administrador";
+      if (authHeaderSub) authHeaderSub.textContent = "Introdueix la clau d'administrador per gestionar els pessebres i participants.";
+      if (authSubmitBtn) authSubmitBtn.textContent = "🔑 ENTRAR COM A ADMIN";
+      if (btnToggleAdmin) btnToggleAdmin.textContent = "🎄 Tornar a l'entrada de participants";
+      if (uInput && uInput.value.trim().toLowerCase() !== 'admin') {
+        uInput.value = 'admin';
+      }
+      setTimeout(() => { if (pInput) pInput.focus(); }, 80);
+    } else {
+      if (muniGroup) muniGroup.style.display = 'block';
+      if (adminPassGroup) adminPassGroup.style.display = 'none';
+      if (authHeaderTitle) authHeaderTitle.textContent = "Entra a la Ruta";
+      if (authHeaderSub) authHeaderSub.textContent = "Posa només el teu nom i de quin poble vens per marcar els pessebres i sumar al Mapa de Calor!";
+      if (authSubmitBtn) authSubmitBtn.textContent = "🎄 ENTRAR A LA RUTA";
+      if (btnToggleAdmin) btnToggleAdmin.textContent = "🔒 Accés Administrador";
+      if (uInput && uInput.value.trim().toLowerCase() === 'admin') {
+        uInput.value = '';
+      }
+    }
+  }
+
   window.openAuthModal = function() {
     const currentUser = window.db.getCurrentUser();
     renderUserProfile();
+    if (!currentUser) {
+      updateAuthModalMode(false);
+    }
     showModal('modal-profile');
     if (!currentUser) {
       setTimeout(() => {
@@ -732,7 +1031,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentUser) {
       if (btnOpenAuth) btnOpenAuth.style.display = 'none';
       if (userLoggedPill) userLoggedPill.style.display = 'flex';
-      if (loggedUserName) loggedUserName.textContent = currentUser.username;
+      if (loggedUserName) {
+        loggedUserName.textContent = currentUser.municipality && currentUser.role !== 'ADMIN'
+          ? `${currentUser.username} (${currentUser.municipality})`
+          : currentUser.username;
+      }
 
       const userVisits = window.db.getUserVisits(currentUser.id);
       const approvedCount = window.db.getApprovedPoints().length;
@@ -748,8 +1051,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const profileName = document.getElementById('profile-username');
       if (profileName) profileName.textContent = currentUser.username;
 
-      const profileEmail = document.getElementById('profile-email');
-      if (profileEmail) profileEmail.textContent = currentUser.email || '';
+      const profileMuni = document.getElementById('profile-municipality');
+      if (profileMuni) {
+        profileMuni.textContent = `📍 ${currentUser.municipality || 'Sant Feliu Sasserra'}`;
+      }
 
       const visitedCountText = document.getElementById('profile-visited-count-text');
       if (visitedCountText) {
@@ -761,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const myRank = leaderboard.find(u => u.id === currentUser.id);
       const rankEl = document.getElementById('profile-rank-text');
       if (rankEl) {
-        rankEl.textContent = myRank ? `#${myRank.rank} al rànquing` : 'Sense rànquing';
+        rankEl.textContent = myRank ? `#${myRank.rank} al rànquing` : 'Administrador';
       }
 
       // Llista de visitats al modal
@@ -815,50 +1120,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // PESTANYES REGISTRAR-SE / INICIAR SESSIÓ
-  const tabRegister = document.getElementById('auth-tab-register');
-  const tabLogin = document.getElementById('auth-tab-login');
-  const authHeaderTitle = document.getElementById('auth-header-title');
-  const authHeaderSub = document.getElementById('auth-header-sub');
-  const authSubmitBtn = document.getElementById('auth-submit-btn');
-  const authHelpNote = document.getElementById('auth-help-note');
-  const authLabelUser = document.getElementById('auth-label-username');
+  // AUTOCOMPLETAT DE MUNICIPIS DE CATALUNYA AL FORMULARI D'ENTRADA
+  const authUsernameInput = document.getElementById('auth-username');
+  const authMuniInput = document.getElementById('auth-municipality');
+  const authMuniSuggestions = document.getElementById('auth-muni-suggestions');
+  const btnToggleAdminMode = document.getElementById('btn-toggle-admin-mode');
 
-  let currentAuthMode = 'register';
+  if (btnToggleAdminMode) {
+    btnToggleAdminMode.addEventListener('click', () => {
+      updateAuthModalMode(!isAdminAuthMode);
+    });
+  }
 
-  function setAuthMode(mode) {
-    currentAuthMode = mode;
-    if (mode === 'register') {
-      if (tabRegister) tabRegister.classList.add('active');
-      if (tabLogin) tabLogin.classList.remove('active');
-      if (authHeaderTitle) authHeaderTitle.textContent = "Registra't a la Ruta";
-      if (authHeaderSub) authHeaderSub.textContent = "Crea el teu compte per validar els pessebres que visites i participar al rànquing!";
-      if (authSubmitBtn) authSubmitBtn.textContent = '✨ REGISTRAR-ME I ENTRAR';
-      if (authLabelUser) authLabelUser.textContent = "Nom d'usuari / participant";
-      if (authHelpNote) authHelpNote.innerHTML = "📝 <strong>Nou participant?</strong> Escull el teu nom i contrasenya per crear el teu perfil i començar a marcar pessebres!";
-    } else {
-      if (tabLogin) tabLogin.classList.add('active');
-      if (tabRegister) tabRegister.classList.remove('active');
-      if (authHeaderTitle) authHeaderTitle.textContent = "Inicia la teva sessió";
-      if (authHeaderSub) authHeaderSub.textContent = "Introdueix el teu nom i contrasenya (o el compte d'admin) per continuar.";
-      if (authSubmitBtn) authSubmitBtn.textContent = '🔑 ENTRAR / INICIAR SESSIÓ';
-      if (authLabelUser) authLabelUser.textContent = "Nom d'usuari (o 'admin')";
-      if (authHelpNote) authHelpNote.innerHTML = "🔑 Ja tens compte creat o ets l'administrador? Posa el teu nom i contrasenya per entrar.";
+  // Si algú escriu 'admin' al camp de nom, mostra automàticament el camp de clau d'administrador
+  if (authUsernameInput) {
+    authUsernameInput.addEventListener('input', () => {
+      const val = authUsernameInput.value.trim().toLowerCase();
+      if (val === 'admin' && !isAdminAuthMode) {
+        updateAuthModalMode(true);
+      } else if (val !== 'admin' && isAdminAuthMode) {
+        updateAuthModalMode(false);
+      }
+    });
+  }
+
+  function renderMuniSuggestions(query) {
+    if (!authMuniSuggestions) return;
+    const matches = window.db.searchMunicipalities(query, 8);
+    if (matches.length === 0) {
+      authMuniSuggestions.style.display = 'none';
+      return;
     }
+
+    authMuniSuggestions.innerHTML = '';
+    matches.forEach(m => {
+      const li = document.createElement('li');
+      li.className = 'muni-suggestion-item';
+      li.innerHTML = `
+        <span class="muni-sug-name">📍 ${escapeHTML(m.name)}</span>
+        ${m.comarca ? `<span class="muni-sug-comarca">${escapeHTML(m.comarca)}</span>` : ''}
+      `;
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        if (authMuniInput) authMuniInput.value = m.name;
+        authMuniSuggestions.style.display = 'none';
+      });
+      li.addEventListener('click', () => {
+        if (authMuniInput) authMuniInput.value = m.name;
+        authMuniSuggestions.style.display = 'none';
+      });
+      authMuniSuggestions.appendChild(li);
+    });
+    authMuniSuggestions.style.display = 'block';
   }
 
-  if (tabRegister) {
-    tabRegister.addEventListener('click', () => setAuthMode('register'));
-  }
-  if (tabLogin) {
-    tabLogin.addEventListener('click', () => setAuthMode('login'));
+  if (authMuniInput) {
+    authMuniInput.addEventListener('focus', () => {
+      renderMuniSuggestions(authMuniInput.value);
+    });
+    authMuniInput.addEventListener('input', () => {
+      renderMuniSuggestions(authMuniInput.value);
+    });
+    authMuniInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (authMuniSuggestions) authMuniSuggestions.style.display = 'none';
+      }, 180);
+    });
   }
 
   // BOTÓ PER OBRIR IDENTIFICACIÓ / REGISTRE
   const btnOpenAuth = document.getElementById('btn-open-auth');
   if (btnOpenAuth) {
     btnOpenAuth.addEventListener('click', () => {
-      setAuthMode('register');
       window.openAuthModal();
     });
   }
@@ -872,30 +1205,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // FORMULARI D'AUTENTICACIÓ / REGISTRE UNIFICAT
+  // FORMULARI D'ENTRADA ULTRA-FÀCIL (NOM + POBLACIÓ)
   const formUnifiedAuth = document.getElementById('form-unified-auth');
   if (formUnifiedAuth) {
     formUnifiedAuth.addEventListener('submit', async (e) => {
       e.preventDefault();
       const u = document.getElementById('auth-username').value;
-      const p = document.getElementById('auth-password').value;
+      const m = authMuniInput ? authMuniInput.value : '';
+      const p = document.getElementById('auth-password') ? document.getElementById('auth-password').value : '';
+      const submitBtn = document.getElementById('auth-submit-btn');
+
+      if (submitBtn) submitBtn.disabled = true;
       try {
-        const res = await window.db.loginOrRegisterDirect(u, p, currentAuthMode);
+        const res = await window.db.enterWithMunicipality(u, m, p);
         hideAllModals();
         if (res.isAdmin) {
           showToast("⚙️ Sessió d'Administrador iniciada!");
         } else if (res.isNew) {
-          showToast(`🎉 Benvingut/da, ${res.user.username}! Compte creat correctament.`);
+          showToast(`🎉 Benvingut/da, ${res.user.username} (${res.user.municipality})!`);
         } else {
-          showToast(`👋 Benvingut/da de nou, ${res.user.username}!`);
+          showToast(`👋 Benvingut/da de nou, ${res.user.username} (${res.user.municipality})!`);
         }
         formUnifiedAuth.reset();
+        updateAuthModalMode(false);
         renderUserProfile();
-        renderApprovedMarkers();
+        renderApprovedMarkers(true);
         renderRankingTable();
         updateTopStats();
       } catch (err) {
         showToast('⚠️ ' + err.message);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   }
@@ -1053,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', () => {
           card.style.gap = '12px';
           card.innerHTML = `
             <div>
-              <div class="admin-proposal-title">🎅 ${escapeHTML(u.username)}</div>
+              <div class="admin-proposal-title">🎅 ${escapeHTML(u.username)} <span style="font-size:0.8rem; font-weight:600; color:#7a1a12;">(📍 ${escapeHTML(u.municipality || 'Sant Feliu Sasserra')})</span></div>
               <div class="admin-proposal-meta" style="margin-bottom:0;">
                 🎄 <strong>${userVisitsCount}</strong> pessebres visitats | 📅 Registrat: ${dateStr}
               </div>
@@ -1176,6 +1516,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTopStats();
     renderRankingTable();
     renderUserProfile();
+    if (document.getElementById('modal-ranking').classList.contains('active') && currentRankingType === 'origins') {
+      renderOriginsHeatmapAndTable();
+    }
     if (document.getElementById('modal-admin').classList.contains('active')) {
       renderAdminPanel();
     }
