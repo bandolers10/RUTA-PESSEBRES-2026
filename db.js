@@ -909,7 +909,13 @@ class PessebresDB {
 
   // --- USERS & ENTRADA ULTRA-FÀCIL AMB NOM + POBLACIÓ ---
   getUsers() {
-    return JSON.parse(localStorage.getItem(DB_KEYS.USERS) || '[]');
+    const list = JSON.parse(localStorage.getItem(DB_KEYS.USERS) || '[]');
+    const current = this.getCurrentUser();
+    if (current && current.role !== 'ADMIN' && !list.some(u => u.id === current.id)) {
+      list.push(current);
+      localStorage.setItem(DB_KEYS.USERS, JSON.stringify(list));
+    }
+    return list;
   }
 
   getCurrentUser() {

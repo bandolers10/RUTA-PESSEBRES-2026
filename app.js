@@ -1096,11 +1096,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Ranking text
+      const isAdminUser = currentUser.role === 'ADMIN' || currentUser.username.toLowerCase() === 'admin';
       const leaderboard = window.db.getLeaderboard();
       const myRank = leaderboard.find(u => u.id === currentUser.id);
       const rankEl = document.getElementById('profile-rank-text');
       if (rankEl) {
-        rankEl.textContent = myRank ? `#${myRank.rank} al rànquing` : 'Administrador';
+        if (isAdminUser) {
+          rankEl.textContent = '⚙️ Administrador';
+        } else {
+          rankEl.textContent = myRank ? `#${myRank.rank} al rànquing` : '#1 al rànquing';
+        }
       }
 
       // Llista de visitats al modal
