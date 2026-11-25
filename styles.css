@@ -25,6 +25,10 @@
   --radius-lg: 2px;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -1074,21 +1078,20 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   AUTH MODAL - MODERN REDESIGN
+   AUTH MODAL - DISSENY ELEGANT, ENCAIXAT I NADALENC
    -------------------------------------------------------------------------- */
 
-/* Card sense border-radius agut (ja ve de --radius-lg) però sense la capçalera verda per defecte */
 .auth-modal-card {
-  background: var(--cream-light);
-  border: 2px solid var(--accent-gold);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f2e7 100%);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
   width: 100%;
-  max-width: 400px;
-  max-height: 90vh;
+  max-width: 420px;
+  max-height: 92vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  overflow-x: hidden;
+  box-shadow: 0 24px 65px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.25);
   position: relative;
-  overflow: hidden;
   transform: scale(0.95);
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -1100,71 +1103,93 @@ body {
 /* Botó tancar flotant sobre el banner */
 .auth-close-btn {
   position: absolute;
-  top: 12px;
+  top: 14px;
   right: 14px;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  font-size: 1.3rem;
-  border: none;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
   cursor: pointer;
-  line-height: 1;
-  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   z-index: 10;
-  border-radius: 2px;
-  transition: background 0.2s;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
-.auth-close-btn:hover { background: rgba(255,255,255,0.35); }
+.auth-close-btn:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(1.06);
+}
 
 /* ——— BANNER BENVINGUDA (auth) ——— */
 .auth-welcome-banner {
-  background: linear-gradient(160deg, #3d0f0f 0%, #6b1212 50%, #8b1a1a 100%);
-  padding: 36px 28px 28px;
+  background: radial-gradient(circle at 50% 0%, #9e1b1b 0%, #6b1212 55%, #3d0a0a 100%);
+  padding: 28px 24px 22px;
   text-align: center;
   position: relative;
+  border-bottom: 2px solid #d4af37;
+}
+
+.auth-welcome-badge {
+  display: inline-block;
+  background: rgba(229, 184, 105, 0.18);
+  border: 1px solid rgba(229, 184, 105, 0.55);
+  color: #f7dc88;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
 }
 
 .auth-welcome-icon {
-  font-size: 3rem;
-  margin-bottom: 10px;
+  font-size: 2.7rem;
+  margin-bottom: 6px;
   display: block;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
 }
 
 .auth-welcome-title {
   font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif;
-  font-size: 2rem;
+  font-size: 1.85rem;
   font-weight: 900;
   color: #fdfbf7;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
+  letter-spacing: 1.5px;
+  margin: 0 0 6px 0;
 }
 
 .auth-welcome-sub {
-  font-size: 0.875rem;
-  color: rgba(253,251,247,0.75);
-  line-height: 1.5;
-  max-width: 280px;
+  font-size: 0.85rem;
+  color: rgba(253, 251, 247, 0.85);
+  line-height: 1.45;
+  max-width: 320px;
   margin: 0 auto;
 }
 
 /* ——— BANNER PERFIL (logged in) ——— */
 .auth-profile-banner {
-  background: linear-gradient(160deg, #0b2518 0%, #143628 60%, #1b4332 100%);
-  padding: 36px 28px 24px;
+  background: radial-gradient(circle at 50% 0%, #1f523b 0%, #143628 60%, #0b2518 100%);
+  padding: 30px 24px 22px;
   text-align: center;
   position: relative;
+  border-bottom: 2px solid #d4af37;
 }
 
 .auth-avatar-circle {
-  font-size: 3.5rem;
+  font-size: 3.2rem;
   display: block;
-  margin-bottom: 10px;
-  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5));
+  margin-bottom: 8px;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
 }
 
 .auth-profile-name {
   font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif;
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   font-weight: 900;
   color: #fdfbf7;
   letter-spacing: 1px;
@@ -1172,104 +1197,30 @@ body {
 
 .auth-profile-sub {
   font-size: 0.82rem;
-  color: rgba(253,251,247,0.6);
+  color: rgba(253, 251, 247, 0.65);
   margin-top: 2px;
 }
 
 .auth-rank-chip {
   display: inline-block;
-  background: var(--accent-gold);
+  background: linear-gradient(135deg, #f3ce85 0%, #d4af37 100%);
   color: #3d0f0f;
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   padding: 4px 14px;
+  border-radius: 20px;
   margin-top: 10px;
   letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 /* ——— FORM BODY ——— */
 .auth-form-body {
-  padding: 24px 24px 20px;
-}
-
-.auth-tab-switch {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  background: #eee5db;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-}
-
-.auth-tab-btn {
-  flex: 1;
-  padding: 9px 12px;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 0.88rem;
-  color: #7a6555;
-  cursor: pointer;
-  transition: all 0.2s;
-  border-radius: var(--radius-sm);
-}
-
-.auth-tab-btn.active {
-  background: white;
-  color: #522415;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 22px 22px 18px;
 }
 
 .auth-profile-body {
-  padding: 20px 24px;
-}
-
-/* ——— BOTÓ GOOGLE ——— */
-.auth-btn-google {
-  width: 100%;
-  background: white;
-  border: 1.5px solid #e0e0e0;
-  color: #3c4043;
-  font-weight: 600;
-  font-family: inherit;
-  font-size: 0.95rem;
-  padding: 13px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  margin-bottom: 18px;
-  transition: all 0.2s ease;
-  border-radius: var(--radius-sm);
-}
-
-.auth-btn-google:hover {
-  background: #f8f8f8;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-  transform: translateY(-1px);
-}
-
-/* ——— DIVISOR ——— */
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #b8a89a;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 18px;
-}
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #e0d8cd;
+  padding: 20px 22px;
 }
 
 /* ——— INPUTS AUTH ——— */
@@ -1279,8 +1230,8 @@ body {
 
 .auth-input-label {
   display: block;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
   color: #522415;
   margin-bottom: 6px;
   letter-spacing: 0.5px;
@@ -1288,45 +1239,89 @@ body {
 }
 
 .auth-input {
+  box-sizing: border-box;
   width: 100%;
-  padding: 12px 16px;
-  border: 1.5px solid #e0d0c4;
-  border-radius: var(--radius-sm);
-  background: #fefcf9;
+  padding: 12px 14px;
+  border: 1.5px solid #d8c7b4;
+  border-radius: 10px;
+  background: #ffffff;
   font-family: inherit;
   font-size: 0.95rem;
+  font-weight: 600;
   color: #2a1a14;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-input::placeholder {
+  color: #a89888;
+  font-weight: 500;
 }
 
 .auth-input:focus {
   outline: none;
   border-color: #8b1a1a;
-  box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.12);
-  background: white;
+  box-shadow: 0 0 0 3.5px rgba(139, 26, 26, 0.14);
+  background: #ffffff;
+}
+
+/* Píndoles ràpides de poblacions freqüents */
+.muni-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.muni-quick-chip {
+  background: #f3ece1;
+  border: 1px solid #d8c8b4;
+  color: #522415;
+  font-family: inherit;
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.muni-quick-chip:hover {
+  background: #e9decb;
+  border-color: #b8976c;
+  transform: translateY(-1px);
+}
+
+.muni-quick-chip.active {
+  background: #7a1a12;
+  color: #fdfbf7;
+  border-color: #52100a;
 }
 
 /* ——— BOTÓ PRINCIPAL AUTH ——— */
 .auth-btn-primary {
+  box-sizing: border-box;
   width: 100%;
   padding: 13px 20px;
-  background: linear-gradient(135deg, #6b1212 0%, #4a0a0a 100%);
-  color: var(--accent-gold);
-  border: 1px solid #a0751a;
-  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #8b1a1a 0%, #52100a 100%);
+  color: #f7dc88;
+  border: 1.5px solid #d4af37;
+  border-radius: 10px;
   font-family: inherit;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   cursor: pointer;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+  box-shadow: 0 6px 16px rgba(107, 18, 18, 0.3);
   transition: all 0.2s ease;
   margin-top: 4px;
 }
 
 .auth-btn-primary:hover {
-  background: linear-gradient(135deg, #8b1a1a 0%, #5c0d0d 100%);
+  background: linear-gradient(135deg, #a31f1f 0%, #68140d 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(107, 18, 18, 0.4);
+  box-shadow: 0 8px 22px rgba(107, 18, 18, 0.42);
+  color: #ffffff;
 }
 
 /* ——— ADMIN LINK ——— */

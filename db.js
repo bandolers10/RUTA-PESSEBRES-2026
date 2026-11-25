@@ -844,8 +844,6 @@ class PessebresDB {
   async syncFromCloud() {
     if (this.isDemo || !this.isCloudEnabled || !this.supabase) return;
     try {
-      const LAUNCH_CUTOFF = '2026-11-25T20:45:00Z';
-
       const [resUsers, resPoints, resVisits] = await Promise.all([
         this.supabase.from('users').select('id, username, email, role, created_at'),
         this.supabase.from('nativity_points').select('*'),
@@ -853,21 +851,7 @@ class PessebresDB {
       ]);
 
       if (!resUsers.error && resUsers.data) {
-        // Esborrar automàticament del núvol qualsevol usuari de prova antic d'abans de deixar la web en blanc
-        const oldTestUsers = resUsers.data.filter(
-          u => u.role !== 'ADMIN' && u.id !== 'usr_admin' && (!u.created_at || u.created_at < LAUNCH_CUTOFF)
-        );
-        if (oldTestUsers.length > 0) {
-          oldTestUsers.forEach(u => {
-            this.supabase.from('visits').delete().eq('user_id', u.id).then();
-            this.supabase.from('users').delete().eq('id', u.id).then();
-          });
-        }
-
-        const validUsers = resUsers.data.filter(
-          u => u.role === 'ADMIN' || u.id === 'usr_admin' || (u.created_at && u.created_at >= LAUNCH_CUTOFF)
-        );
-        const sanitizedUsers = validUsers.map(u => this.sanitizeUserObject(u));
+        const sanitizedUsers = resUsers.data.map(u => this.sanitizeUserObject(u));
         localStorage.setItem(DB_KEYS.USERS, JSON.stringify(sanitizedUsers));
 
         const current = this.getCurrentUser();
@@ -880,23 +864,11 @@ class PessebresDB {
       }
       if (!resPoints.error && resPoints.data) {
         const deletedIds = this.getDeletedPointIds();
-        // Esborrar automàticament del núvol qualsevol pessebre antic d'abans de deixar la web en blanc
-        const oldPoints = resPoints.data.filter(p => !p.created_at || p.created_at < LAUNCH_CUTOFF);
-        if (oldPoints.length > 0) {
-          oldPoints.forEach(p => {
-            this.supabase.from('visits').delete().eq('nativity_point_id', p.id).then();
-            this.supabase.from('nativity_points').delete().eq('id', p.id).then();
-          });
-        }
-
-        const cleanCloud = resPoints.data.filter(
-          p => !deletedIds.has(p.id) && p.created_at && p.created_at >= LAUNCH_CUTOFF
-        );
+        const cleanCloud = resPoints.data.filter(p => !deletedIds.has(p.id));
         localStorage.setItem(DB_KEYS.POINTS, JSON.stringify(cleanCloud));
       }
       if (!resVisits.error && resVisits.data) {
-        const validVisits = resVisits.data.filter(v => v.created_at && v.created_at >= LAUNCH_CUTOFF);
-        localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(validVisits));
+        localStorage.setItem(DB_KEYS.VISITS, JSON.stringify(resVisits.data));
       }
 
       window.dispatchEvent(new CustomEvent('db:changed'));

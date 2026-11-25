@@ -277,10 +277,11 @@
       <!-- VISTA ENTRADA DIRECTA AMB NOM + POBLACIÓ (SENSE CONTRASENYES NI CORREUS) -->
       <div id="profile-view-auth">
         <div class="auth-welcome-banner">
-          <button class="btn-close-modal auth-close-btn">&times;</button>
+          <button class="btn-close-modal auth-close-btn" title="Tancar">&times;</button>
+          <div class="auth-welcome-badge">✨ RUTA DELS PESSEBRES 2026 ✨</div>
           <div class="auth-welcome-icon">🎄</div>
           <h2 class="auth-welcome-title" id="auth-header-title">Entra a la Ruta</h2>
-          <p class="auth-welcome-sub" id="auth-header-sub">Posa només el teu nom i de quin poble vens per marcar els pessebres i sumar al Mapa de Calor!</p>
+          <p class="auth-welcome-sub" id="auth-header-sub">Indica el teu nom i de quin poble vens per marcar els pessebres visitats i sumar al Mapa de Calor!</p>
         </div>
 
         <div class="auth-form-body">
@@ -290,26 +291,34 @@
               <input type="text" id="auth-username" class="auth-input" placeholder="Ex: Joan, Família Serra..." required>
             </div>
 
-            <!-- CAMP POBLACIÓ AMB AUTOCOMPLETAT DE CATALUNYA -->
+            <!-- CAMP POBLACIÓ AMB AUTOCOMPLETAT DE CATALUNYA + BOTONS RÀPIDS -->
             <div class="auth-input-group auth-muni-group" id="auth-muni-group">
               <label class="auth-input-label" for="auth-municipality">📍 De quina població vens?</label>
               <div class="muni-autocomplete-wrap">
-                <input type="text" id="auth-municipality" class="auth-input" placeholder="Escriu el teu poble o ciutat..." autocomplete="off">
+                <input type="text" id="auth-municipality" class="auth-input" placeholder="Escriu o tria el teu poble..." autocomplete="off">
                 <ul class="muni-suggestions-list" id="auth-muni-suggestions" style="display: none;"></ul>
+              </div>
+              <div class="muni-quick-chips">
+                <button type="button" class="muni-quick-chip" data-muni="Sant Feliu Sasserra">Sant Feliu Sasserra</button>
+                <button type="button" class="muni-quick-chip" data-muni="Prats de Lluçanès">Prats de Lluçanès</button>
+                <button type="button" class="muni-quick-chip" data-muni="Olost">Olost</button>
+                <button type="button" class="muni-quick-chip" data-muni="Oristà">Oristà</button>
+                <button type="button" class="muni-quick-chip" data-muni="Manresa">Manresa</button>
+                <button type="button" class="muni-quick-chip" data-muni="Vic">Vic</button>
               </div>
             </div>
 
             <!-- CAMP OCULT PER A CLAU D'ADMINISTRADOR (NOMÉS ES MOSTRA SI S'ACTIVA EL MODE ADMIN) -->
             <div class="auth-input-group" id="auth-admin-pass-group" style="display: none;">
               <label class="auth-input-label" for="auth-password">🔑 Clau d'Administrador</label>
-              <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+              <input type="password" id="auth-password" class="auth-input" placeholder="Introdueix la contrasenya d'admin...">
             </div>
 
             <button type="submit" class="auth-btn-primary" id="auth-submit-btn">🎄 ENTRAR A LA RUTA</button>
           </form>
 
           <div class="auth-help-note" id="auth-help-note">
-            🔒 <strong>100% Fàcil i Privat:</strong> No demanem correu ni contrasenya. La teva sessió quedarà guardada al mòbil perquè no hagis de tornar a entrar cada cop!
+            🔒 <strong>Fàcil i Privat:</strong> Sense correu ni contrasenya. La sessió queda guardada al teu mòbil perquè no hagis de tornar a entrar cada cop.
           </div>
 
           <div class="auth-admin-toggle-wrap">

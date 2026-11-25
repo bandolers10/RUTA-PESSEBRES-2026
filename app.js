@@ -1174,11 +1174,31 @@ document.addEventListener('DOMContentLoaded', () => {
     authMuniSuggestions.style.display = 'block';
   }
 
+  function syncQuickChipsActive() {
+    const val = (authMuniInput ? authMuniInput.value : '').trim().toLowerCase();
+    document.querySelectorAll('.muni-quick-chip').forEach(chip => {
+      const chipVal = (chip.getAttribute('data-muni') || '').toLowerCase();
+      chip.classList.toggle('active', val !== '' && val === chipVal);
+    });
+  }
+
+  document.querySelectorAll('.muni-quick-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const mName = chip.getAttribute('data-muni') || '';
+      if (authMuniInput) {
+        authMuniInput.value = mName;
+        syncQuickChipsActive();
+      }
+      if (authMuniSuggestions) authMuniSuggestions.style.display = 'none';
+    });
+  });
+
   if (authMuniInput) {
     authMuniInput.addEventListener('focus', () => {
       renderMuniSuggestions(authMuniInput.value);
     });
     authMuniInput.addEventListener('input', () => {
+      syncQuickChipsActive();
       renderMuniSuggestions(authMuniInput.value);
     });
     authMuniInput.addEventListener('blur', () => {
